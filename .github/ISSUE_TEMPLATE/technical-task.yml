@@ -1,0 +1,52 @@
+name: Technical task
+description: Propose engineering work, maintenance, or an infrastructure change.
+title: "[Technical]: "
+labels: ["status:todo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        State the intended result and constraints. This issue is the requirements source for implementation and tests.
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What technical outcome should this task deliver?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and motivation
+      description: Explain why this work is needed and include relevant system context.
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Constraints or proposed approach
+      description: Note required technologies, compatibility needs, or approaches to avoid.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: List verifiable outcomes, including required tests and documentation updates where applicable.
+      placeholder: |
+        - [ ] ...
+        - [ ] Relevant documentation is updated when behavior or operation changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context_links
+    attributes:
+      label: References
+      description: Add related issues, designs, logs, or technical references.
+    validations:
+      required: false

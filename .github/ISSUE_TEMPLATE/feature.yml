@@ -1,0 +1,53 @@
+name: Feature
+description: Propose a new feature or user-facing improvement.
+title: "[Feature]: "
+labels: ["status:todo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the desired outcome clearly. This issue is the requirements source for implementation and tests.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: Who is affected, and what problem or opportunity should this feature address?
+      placeholder: As a..., I need..., so that...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_behavior
+    attributes:
+      label: Proposed behavior
+      description: Explain what the product should do from the user's perspective.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: List observable outcomes that define when this feature is complete.
+      placeholder: |
+        - [ ] Given ..., when ..., then ...
+        - [ ] Relevant documentation is updated when behavior or usage changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and constraints
+      description: Note important limitations, dependencies, or out-of-scope behavior.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add examples, screenshots, or related links if useful.
+    validations:
+      required: false

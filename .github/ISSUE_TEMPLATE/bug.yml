@@ -1,0 +1,74 @@
+name: Bug report
+description: Report incorrect or unexpected product behavior.
+title: "[Bug]: "
+labels: ["status:todo"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide enough detail to reproduce the problem. This issue is the requirements source for the fix and its tests.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description: What is going wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual behavior
+      description: What happened? Include exact errors if available.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected behavior
+      description: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable sequence that reproduces the issue.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include relevant OS, browser, runtime, version, or configuration details.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Fix acceptance criteria
+      description: Describe how the fix can be verified and what regression coverage is needed.
+      placeholder: |
+        - [ ] The reported behavior is corrected.
+        - [ ] A regression test covers the failure.
+        - [ ] Relevant documentation is updated if behavior or usage changes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Add useful error output, screenshots, or other diagnostic details.
+      render: shell
+    validations:
+      required: false
