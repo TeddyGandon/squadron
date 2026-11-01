@@ -111,11 +111,18 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
+          if [[ -z "$SQUADRON_GITHUB_TOKEN" ]]; then
+            echo '::error::SQUADRON_GITHUB_TOKEN is missing. Configure a token with write access to this repository.'
+            exit 1
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m "test: add coverage for pull request #$PR_NUMBER"
           auth_header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SQUADRON_GITHUB_TOKEN" | base64 -w0)"
-          git -c http.extraheader="$auth_header" push origin "HEAD:$PR_HEAD_REF"
+          if ! git -c http.extraheader="$auth_header" push origin "HEAD:$PR_HEAD_REF"; then
+            echo '::error::Push denied. Check that SQUADRON_GITHUB_TOKEN has Contents: Read and write access to this repository and that repository rules allow this branch update.'
+            exit 1
+          fi
 
       - name: Run test suite
         id: test-suite

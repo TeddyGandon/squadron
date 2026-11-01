@@ -16,7 +16,7 @@ The reviewer verdict is posted as a pull request comment; it is not a GitHub app
 Create these repository secrets:
 
 - `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is only provided to the Copilot CLI steps.
-- `SQUADRON_GITHUB_TOKEN`: a fine-grained token with repository contents, pull requests, and issues permissions. It is used by separate steps for pull requests, labels, comments, test commits, and merges.
+- `SQUADRON_GITHUB_TOKEN`: a fine-grained token granted access to this repository with **Contents: Read and write**, **Pull requests: Read and write**, and **Issues: Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, test commits, coder fixes, and merges.
 
 Create these repository labels:
 

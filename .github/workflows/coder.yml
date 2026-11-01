@@ -177,5 +177,12 @@ jobs:
           SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
+          if [[ -z "$SQUADRON_GITHUB_TOKEN" ]]; then
+            echo '::error::SQUADRON_GITHUB_TOKEN is missing. Configure a token with write access to this repository.'
+            exit 1
+          fi
           auth_header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SQUADRON_GITHUB_TOKEN" | base64 -w0)"
-          git -c http.extraheader="$auth_header" push origin "HEAD:$PR_HEAD_REF"
+          if ! git -c http.extraheader="$auth_header" push origin "HEAD:$PR_HEAD_REF"; then
+            echo '::error::Push denied. Check that SQUADRON_GITHUB_TOKEN has Contents: Read and write access to this repository and that repository rules allow this branch update.'
+            exit 1
+          fi

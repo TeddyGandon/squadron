@@ -29,7 +29,7 @@ Keep the PR body closing reference intact: reviewer and tester workflows use `Cl
 Create these repository secrets:
 
 - `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is passed to Copilot CLI steps, with secret redaction enabled.
-- `SQUADRON_GITHUB_TOKEN`: a fine-grained token with repository contents, pull requests, and issues permissions. It is used in separate steps for PR creation, labels, comments, pushing tests, and merges. Use this token rather than `GITHUB_TOKEN` for operations that must trigger subsequent workflows.
+- `SQUADRON_GITHUB_TOKEN`: a fine-grained token granted access to this repository with **Contents: Read and write**, **Pull requests: Read and write**, and **Issues: Read and write**. It is used for PR creation, labels, comments, pushing tests and coder fixes, and merges. Approve the token for the organization if required. Use this token rather than `GITHUB_TOKEN` for operations that must trigger subsequent workflows.
 
 Create these repository labels:
 
@@ -47,6 +47,7 @@ Repository setup checklist:
 
 - Create the `agent:coder`, `agent:reviewer`, and `agent:tester` labels. `agent:coder` is applied to an issue to start work and to an existing PR when it needs rework.
 - Configure the required secrets and project variables above.
+- Ensure the `SQUADRON_GITHUB_TOKEN` token has write access to this repository and that repository rules permit it to push to PR branches.
 - Set `SQUADRON_TEST_PATHS` and `SQUADRON_TEST_COMMAND` to match the product's language, test layout, and test runner when the defaults do not fit.
 - Enable squash auto-merge in repository settings and configure branch protection and required checks.
 
