@@ -11,15 +11,15 @@ Squadron is a GitHub Actions template for a product workflow run by three AI eng
 1. Add `status:todo` to a backlog issue. Apply `agent:coder` when work should start.
 2. The coder changes the issue status label to `status:in-progress`, implements the issue, updates documentation affected by the change, and opens a pull request containing `Closes #<issue-number>`. The issue remains in progress while the PR is reviewed, and the coder labels the PR `agent:reviewer`.
 3. The reviewer runs for the reviewer label and subsequent PR updates. It reviews code and relevant documentation against the issue, then posts a verdict comment. If there are no blocking findings, the issue status label becomes `status:testing` and the PR receives `agent:tester`. Otherwise, the issue status label becomes `status:in-progress` and the PR receives `agent:coder` so the coder can fix that same PR.
-4. The tester uses only the linked issue title and body as its requirements source; it does not consult documentation, PR descriptions, review comments, or other agent summaries. It may inspect implementation code and existing tests only to locate test setup and entry points. It adds or updates tests under the configured test pathspecs, publishes those test changes, and runs the configured test command. If the test command fails, it includes the last 80 log lines in its PR comment, changes the issue status to `status:in-progress`, and queues the coder on that PR. On success it enables squash auto-merge. The issue status label becomes `status:done` after GitHub reports the PR merged.
+4. The tester uses only the linked issue title and body as its requirements source; it does not consult documentation, PR descriptions, review comments, or other agent summaries. It may inspect implementation code and existing tests only to locate test setup and entry points. It adds or updates tests under the configured test pathspecs, publishes those test changes, and runs the configured test command. If the test command fails, it includes the last 80 log lines in its PR comment, changes the issue status to `status:in-progress`, and queues the coder on that PR. On success it directly squash-merges the PR. The issue status label becomes `status:done` after GitHub reports the PR merged.
 
-The reviewer verdict is a PR comment, not a formal GitHub approval review. Branch protection and required checks remain authoritative. Auto-merge may wait for those requirements.
+The reviewer verdict is a PR comment, not a formal GitHub approval review. Branch protection and required checks remain authoritative. Any required checks other than the tester's own test command must already pass before its direct merge step can succeed.
 
 ## Workflow Ownership
 
 - `.github/workflows/coder.yml` starts on an issue receiving `agent:coder` or a same-repository PR receiving `agent:coder`. The issue path implements a new task and opens a PR; the PR path applies feedback to the existing branch, then pushes changes to retrigger review.
 - `.github/workflows/reviewer.yml` handles reviewer-labeled, reopened, ready-for-review, and synchronized PRs from the same repository. It clears an earlier tester queue before reviewing code and docs against the linked issue, posts the result, updates the issue status label, queues testing on a validated result, and queues the coder on rejection. Fork PRs are ignored.
-- `.github/workflows/tester.yml` starts when a PR receives `agent:tester`. It stages only configured test paths, publishes test changes, and runs the test command. A test-command failure reports logs, sets the issue to In Progress, and queues the coder; success enables squash auto-merge. Its merged-PR event marks the issue Done.
+- `.github/workflows/tester.yml` starts when a PR receives `agent:tester`. It stages only configured test paths, publishes test changes, and runs the test command. A test-command failure reports logs, sets the issue to In Progress, and queues the coder; success directly squash-merges the PR. Its merged-PR event marks the issue Done.
 - `.github/scripts/set-issue-status-label.sh` replaces the issue's current status label with the requested one while preserving unrelated labels.
 
 Keep the PR body closing reference intact: reviewer and tester workflows use `Closes #<number>` to locate the issue. Keep all agent and status labels listed below available in the repository.
@@ -49,7 +49,7 @@ Repository setup checklist:
 - Configure the required secrets and project variables above.
 - Ensure the `SQUADRON_GITHUB_TOKEN` token has write access to this repository and that repository rules permit it to push to PR branches.
 - Set `SQUADRON_TEST_PATHS` and `SQUADRON_TEST_COMMAND` to match the product's language, test layout, and test runner when the defaults do not fit.
-- Enable squash auto-merge in repository settings and configure branch protection and required checks.
+- Configure branch protection and required checks. Any checks besides the tester's test command must pass before the tester's direct merge step.
 
 ## Security and Operating Boundaries
 

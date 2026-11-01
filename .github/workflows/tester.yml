@@ -149,12 +149,12 @@ jobs:
             exit "$test_status"
           fi
 
-      - name: Enable squash auto-merge
+      - name: Squash merge pull request
         working-directory: product
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr merge "$PR_NUMBER" --auto --squash --delete-branch
+        run: gh pr merge "$PR_NUMBER" --squash --delete-branch
 
       - name: Report test failure
         if: failure() && steps.test-suite.outcome == 'failure'
