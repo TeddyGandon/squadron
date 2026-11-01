@@ -1,4 +1,4 @@
-# Usage
+![Logo](logo.svg)
 
 GitHub Actions pipelines for a three-role AI engineering workflow using issue labels, without a GitHub Project dependency.
 
