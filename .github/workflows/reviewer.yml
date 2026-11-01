@@ -123,6 +123,33 @@ jobs:
             "$issue_title" "$issue_body" "$PR_TITLE" "$PR_BODY" >> "$prompt_file"
           copilot --prompt "$(cat "$prompt_file")" --allow-all-tools \
             --secret-env-vars=COPILOT_GITHUB_TOKEN --silent > "$result_file"
+            python3 - "$result_file" <<'PY'
+            import json
+            import sys
+            from pathlib import Path
+
+            result_path = Path(sys.argv[1])
+            response = result_path.read_text()
+            decoder = json.JSONDecoder()
+            for offset, character in enumerate(response):
+              if character != "{":
+                continue
+              try:
+                report, _ = decoder.raw_decode(response[offset:])
+              except json.JSONDecodeError:
+                continue
+              if (
+                isinstance(report, dict)
+                and isinstance(report.get("validated"), bool)
+                and isinstance(report.get("summary"), str)
+                and isinstance(report.get("findings"), list)
+              ):
+                result_path.write_text(json.dumps(report))
+                break
+            else:
+              print("::error::Reviewer response did not contain a valid JSON report.", file=sys.stderr)
+              raise SystemExit(1)
+            PY
           jq -e '
             (.validated | type == "boolean") and
             (.summary | type == "string") and
