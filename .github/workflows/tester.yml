@@ -170,7 +170,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
           STATUS_LABEL: status:in-progress
-        run: bash template/.github/scripts/set-issue-status-label.sh
+        run: bash "$GITHUB_WORKSPACE/template/.github/scripts/set-issue-status-label.sh"
 
       - name: Queue coder for test failure
         if: failure() && steps.test-suite.outcome == 'failure' && steps.issue.outputs.number != ''
