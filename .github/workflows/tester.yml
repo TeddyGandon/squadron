@@ -94,9 +94,21 @@ jobs:
         env:
           SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/**/*.test.ts' }}
         run: |
-          IFS=',' read -r -a test_paths <<< "$SQUADRON_TEST_PATHS"
           git reset --quiet
-          git add -A -- "${test_paths[@]}"
+          IFS=',' read -r -a configured_paths <<< "$SQUADRON_TEST_PATHS"
+          matched_paths=()
+          for pathspec in "${configured_paths[@]}"; do
+            if [[ -n "$(git ls-files --cached --others --exclude-standard -- "$pathspec")" ]]; then
+              matched_paths+=("$pathspec")
+            else
+              printf '::notice::Ignoring unmatched test pathspec: %s\n' "$pathspec"
+            fi
+          done
+          if ((${#matched_paths[@]} == 0)); then
+            echo '::error::None of SQUADRON_TEST_PATHS match files in this repository.'
+            exit 1
+          fi
+          git add -A -- "${matched_paths[@]}"
           if git diff --cached --quiet; then
             echo '::error::The tester did not add or update tests under SQUADRON_TEST_PATHS.'
             exit 1

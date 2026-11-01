@@ -56,6 +56,7 @@ Repository setup checklist:
 - Apply `agent:coder` only to issues that should be processed. Copilot CLI can edit files and run tools, but the GitHub write token is not present in its execution step.
 - Reviewer and tester workflows only process PRs whose head repository is the current repository; fork PRs are not given the automation credentials.
 - The tester commits only files matched by `SQUADRON_TEST_PATHS`; other working-tree changes from the AI step are discarded.
+- Configured test pathspecs with no matching files are skipped, so a repository need not contain every default test directory or pattern. The tester fails with a clear error if none of its configured paths match.
 - Tester requirements come from the linked issue title/body only. It must not depend on documentation or summaries produced by the coder or reviewer.
 - The reviewer result is model-generated. Treat it as automation feedback, not a substitute for required human review or branch protection.
 - The tester does not move an issue to Done merely because tests pass; the PR must actually merge first.

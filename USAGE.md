@@ -30,4 +30,6 @@ Set these optional repository variables when the defaults do not fit the product
 
 The status helper replaces any existing `status:*` label with the requested status label and preserves all unrelated issue labels. No project, project ID, or project status field is required.
 
+Unmatched entries in `SQUADRON_TEST_PATHS` are ignored, so repositories do not need to contain every default test path. At least one configured path must match files for the tester to stage its changes.
+
 Enable squash auto-merge in repository settings. Configure branch protection and required checks; the tester enables auto-merge only after its test command succeeds, and GitHub completes the merge when all repository rules pass.
