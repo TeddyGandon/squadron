@@ -2,7 +2,7 @@ name: Squadron Reviewer
 
 on:
   pull_request:
-    types: [labeled, reopened, ready_for_review, synchronize]
+    types: [labeled, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -19,8 +19,7 @@ jobs:
       (
         (github.event.action == 'labeled' && github.event.label.name == 'agent:reviewer') ||
         github.event.action == 'reopened' ||
-        github.event.action == 'ready_for_review' ||
-        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'agent:reviewer'))
+        github.event.action == 'ready_for_review'
       )
     runs-on: ubuntu-latest
     steps:
