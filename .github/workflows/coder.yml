@@ -82,7 +82,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.pull-request.outputs.pull-request-number }}
-        run: gh pr edit "$PR_NUMBER" --add-label agent:reviewer
+        run: |
+          labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')"
+          if grep -Fqx 'agent:reviewer' <<< "$labels"; then
+            gh pr edit "$PR_NUMBER" --remove-label agent:reviewer
+          fi
+          gh pr edit "$PR_NUMBER" --add-label agent:reviewer
 
   coder-fix:
     if: github.event_name == 'pull_request' && github.event.label.name == 'agent:coder' && github.event.pull_request.head.repo.full_name == github.repository
@@ -186,3 +191,9 @@ jobs:
             echo '::error::Push denied. Check that SQUADRON_GITHUB_TOKEN has Contents: Read and write access to this repository and that repository rules allow this branch update.'
             exit 1
           fi
+
+      - name: Queue reviewer after fixes
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --add-label agent:reviewer

@@ -16,7 +16,12 @@ jobs:
   reviewer:
     if: >-
       github.event.pull_request.head.repo.full_name == github.repository &&
-      (github.event.action != 'labeled' || github.event.label.name == 'agent:reviewer')
+      (
+        (github.event.action == 'labeled' && github.event.label.name == 'agent:reviewer') ||
+        github.event.action == 'reopened' ||
+        github.event.action == 'ready_for_review' ||
+        (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'agent:reviewer'))
+      )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +49,18 @@ jobs:
             echo 'open=true' >> "$GITHUB_OUTPUT"
           else
             echo 'open=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Consume reviewer queue label
+        if: steps.pr-state.outputs.open == 'true'
+        working-directory: product
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          labels="$(gh pr view "$PR_NUMBER" --json labels --jq '.labels[].name')"
+          if grep -Fqx 'agent:reviewer' <<< "$labels"; then
+            gh pr edit "$PR_NUMBER" --remove-label agent:reviewer
           fi
 
       - name: Clear previous tester queue
