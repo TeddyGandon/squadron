@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   coder:
-    if: github.event_name == 'issues' && github.event.label.name == 'agent:coder'
+    if: github.event_name == 'issues' && github.event.label.name == 'status:todo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

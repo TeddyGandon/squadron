@@ -8,7 +8,7 @@ Squadron is a GitHub Actions template for a product workflow run by three AI eng
 
 ## Workflow Lifecycle
 
-1. Add `status:todo` to a backlog issue. Apply `agent:coder` when work should start.
+1. Add `status:todo` to an issue when work should start. The coder workflow runs automatically on that label; no `agent:coder` label is needed on the issue.
 2. The coder changes the issue status label to `status:in-progress`, implements the issue, updates documentation affected by the change, and opens a pull request containing `Closes #<issue-number>`. The issue remains in progress while the PR is reviewed, and the coder queues review by applying `agent:reviewer` to the PR.
 3. The reviewer consumes the `agent:reviewer` label when a review starts. It reviews code and relevant documentation against the issue, then posts a verdict comment. If there are no blocking findings, the issue status label becomes `status:testing` and the PR receives `agent:tester`. Otherwise, the issue status label becomes `status:in-progress` and the PR receives `agent:coder` so the coder can fix that same PR. After pushing fixes, the coder reapplies `agent:reviewer` to queue a new review.
 4. The tester uses only the linked issue title and body as its requirements source; it does not consult documentation, PR descriptions, review comments, or other agent summaries. It may inspect implementation code and existing tests only to locate test setup and entry points. It adds or updates tests under the configured test pathspecs and ensures the exact `SQUADRON_TEST_COMMAND` is configured. If an npm script is missing, it adds the script to `package.json`, reusing the existing test runner or adding a suitable test dependency and updating the lockfile. It never uses a no-op command or weakens tests to force a pass. The workflow installs dependencies and runs the configured command again after publishing test changes; only then does it attempt the merge. If the command fails, it includes the last 80 log lines in its PR comment, changes the issue status to `status:in-progress`, and queues the coder on that PR. On success it directly squash-merges the PR. The issue status label becomes `status:done` after GitHub reports the PR merged.
@@ -17,7 +17,7 @@ The reviewer verdict is a PR comment, not a formal GitHub approval review. Branc
 
 ## Workflow Ownership
 
-- `.github/workflows/coder.yml` starts on an issue receiving `agent:coder` or a same-repository PR receiving `agent:coder`. The issue path implements a new task and opens a PR; the PR path applies feedback to the existing branch, pushes changes, then reapplies `agent:reviewer`.
+- `.github/workflows/coder.yml` starts on an issue receiving `status:todo` or a same-repository PR receiving `agent:coder`. The issue path implements a new task and opens a PR; the PR path applies feedback to the existing branch, pushes changes, then reapplies `agent:reviewer`.
 - `.github/workflows/reviewer.yml` handles reviewer-labeled, reopened, and ready-for-review PRs from the same repository. It does not run on `synchronize`; coder rework explicitly reapplies `agent:reviewer` after pushing fixes, while tester pushes cannot trigger another review. The workflow consumes `agent:reviewer` at review start, clears an earlier tester queue, reviews code and docs against the linked issue, posts the result, updates the issue status label, queues testing on a validated result, and queues the coder on rejection. Fork PRs are ignored.
 - `.github/workflows/tester.yml` starts when a PR receives `agent:tester`. It installs npm dependencies if a manifest exists, stages configured test paths and any changed npm manifests, publishes those changes, and runs `SQUADRON_TEST_COMMAND`. A test-command failure reports logs, sets the issue to In Progress, and queues the coder; success directly squash-merges the PR. Its merged-PR event marks the issue Done.
 - `.github/scripts/set-issue-status-label.sh` replaces the issue's current status label with the requested one while preserving unrelated labels.
@@ -45,7 +45,7 @@ The status helper removes existing `status:*` labels and applies the requested s
 
 Repository setup checklist:
 
-- Create the `agent:coder`, `agent:reviewer`, and `agent:tester` labels. `agent:coder` is applied to an issue to start work and to an existing PR when it needs rework.
+- Create the `agent:coder`, `agent:reviewer`, and `agent:tester` labels. `agent:coder` is applied to an existing PR when it needs rework; `status:todo` starts new issue work.
 - Configure the required secrets and project variables above.
 - Ensure the `SQUADRON_GITHUB_TOKEN` token has write access to this repository and that repository rules permit it to push to PR branches.
 - Set `SQUADRON_TEST_PATHS` and `SQUADRON_TEST_COMMAND` to match the product's language, test layout, and test runner when the defaults do not fit.
@@ -53,7 +53,7 @@ Repository setup checklist:
 
 ## Security and Operating Boundaries
 
-- Apply `agent:coder` only to issues that should be processed. Copilot CLI can edit files and run tools, but the GitHub write token is not present in its execution step.
+- Apply `status:todo` only to issues that should be processed. Copilot CLI can edit files and run tools, but the GitHub write token is not present in its execution step.
 - Reviewer and tester workflows only process PRs whose head repository is the current repository; fork PRs are not given the automation credentials.
 - The tester commits files matched by `SQUADRON_TEST_PATHS` plus changed `package.json` or npm lockfiles needed to configure its test command; other working-tree changes from the AI step are discarded.
 - Configured test pathspecs with no matching files are skipped, so a repository need not contain every default test directory or pattern. The tester fails with a clear error if none of its configured paths match.

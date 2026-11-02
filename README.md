@@ -8,7 +8,7 @@ Squadron turns labeled GitHub issues into a coordinated implementation, review, 
 
 ## The workflow
 
-1. **Start with an issue.** Choose a Feature, Technical task, or Bug form. Add `agent:coder` when the issue is ready to be worked on.
+1. **Start with an issue.** Choose a Feature, Technical task, or Bug form. Each form applies `status:todo`, which starts the coder automatically.
 2. **Implement.** The coder updates relevant documentation, implements the issue, and opens a pull request.
 3. **Review.** The reviewer checks the code and documentation against the issue. It queues the tester on approval or returns the same pull request to the coder when changes are needed.
 4. **Test and merge.** The tester uses the issue as its requirements source, runs the configured test command, and squash-merges after success. A failure returns the pull request to the coder.
@@ -20,7 +20,7 @@ Issue status is tracked with `status:todo`, `status:in-progress`, `status:testin
 1. Use this repository as a template to create your product repository.
 2. Configure the GitHub secrets and labels described in the [usage guide](USAGE.md).
 3. Configure branch protection and required checks. Required checks other than the tester's command must pass before its direct merge can succeed.
-4. Add `status:todo` to an issue and apply `agent:coder` to start the workflow.
+4. Create an issue with `status:todo` to start the workflow. For manually created issues, add that label when the issue is ready.
 
 The repository includes issue forms for feature requests, technical tasks, and bugs. See [USAGE.md](USAGE.md) for setup details and [SQUADRON.md](SQUADRON.md) for template workflow and maintenance context.
 
