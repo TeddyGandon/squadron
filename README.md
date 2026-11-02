@@ -1,6 +1,4 @@
-<p align="center">
-	<img src="logo.svg" alt="Squadron" width="144">
-</p>
+![Logo](logo.svg)
 
 # Squadron
 
