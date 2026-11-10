@@ -39,7 +39,7 @@ Create these repository labels:
 These repository variables are optional overrides; the values shown are used when they are unset:
 
 - `SQUADRON_TEST_COMMAND`: `npm run test`
-- `SQUADRON_TEST_PATHS`: `tests,src/*.test.ts,src/**/*.test.ts`
+- `SQUADRON_TEST_PATHS`: `**/*.test.*,**/*.spec.*`
 
 The status helper removes existing `status:*` labels and applies the requested status label, preserving unrelated labels. No project, project ID, or project status field is required.
 
@@ -56,7 +56,7 @@ Repository setup checklist:
 - Apply `status:todo` only to issues that should be processed. Copilot CLI can edit files and run tools, but the GitHub write token is not present in its execution step.
 - Reviewer and tester workflows only process PRs whose head repository is the current repository; fork PRs are not given the automation credentials.
 - The tester commits files matched by `SQUADRON_TEST_PATHS` plus changed `package.json` or npm lockfiles needed to configure its test command; other working-tree changes from the AI step are discarded.
-- Configured test pathspecs with no matching files are skipped, so a repository need not contain every default test directory or pattern. The tester fails with a clear error if none of its configured paths match.
+- Configured test pathspecs with no matching files are skipped. The default matches `*.test.*` and `*.spec.*` files anywhere in the repository, including root-level tests; the tester fails with a clear error if none of its configured paths match.
 - Tester requirements come from the linked issue title/body only. It must not depend on documentation or summaries produced by the coder or reviewer.
 - The reviewer result is model-generated. Treat it as automation feedback, not a substitute for required human review or branch protection.
 - The tester does not move an issue to Done merely because tests pass; the PR must actually merge first.

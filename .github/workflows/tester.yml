@@ -75,7 +75,7 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           SQUADRON_TEST_COMMAND: ${{ vars.SQUADRON_TEST_COMMAND || 'npm run test' }}
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/*.test.ts,src/**/*.test.ts' }}
+          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || '**/*.test.*,**/*.spec.*' }}
         run: |
           if [[ -z "$SQUADRON_TEST_COMMAND" || -z "$SQUADRON_TEST_PATHS" ]]; then
             echo '::error::Set SQUADRON_TEST_COMMAND and SQUADRON_TEST_PATHS repository variables.'
@@ -87,8 +87,9 @@ jobs:
           of requirements. Do not read or rely on documentation, README files, the pull request
           description, review comments, or summaries from the coder or reviewer. You may inspect
           implementation code and existing tests only to identify test setup and code entry points;
-          do not infer expected behavior from them. Add or update automated tests only under the
-          configured test paths. Ensure the exact SQUADRON_TEST_COMMAND supplied below is configured
+          do not infer expected behavior from them. Add or update automated tests with filenames
+          matching SQUADRON_TEST_PATHS anywhere in the repository; do not assume tests/ or src/ is
+          the only valid location. Ensure the exact SQUADRON_TEST_COMMAND supplied below is configured
           in the project. If it is an npm run command and that script is missing, add the script to
           package.json using the test runner already present; if no runner is present, add a suitable
           test dependency and update the npm lockfile. Do not replace the command with a no-op or
@@ -110,7 +111,7 @@ jobs:
       - name: Stage only configured test paths
         working-directory: product
         env:
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/*.test.ts,src/**/*.test.ts' }}
+          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || '**/*.test.*,**/*.spec.*' }}
         run: |
           git reset --quiet
           IFS=',' read -r -a configured_paths <<< "$SQUADRON_TEST_PATHS"

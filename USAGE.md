@@ -26,10 +26,10 @@ Create these repository labels:
 Set these optional repository variables when the defaults do not fit the product:
 
 - `SQUADRON_TEST_COMMAND`: defaults to `npm run test`.
-- `SQUADRON_TEST_PATHS`: defaults to `tests,src/*.test.ts,src/**/*.test.ts` (test files directly under `src` and in nested source folders).
+- `SQUADRON_TEST_PATHS`: defaults to `**/*.test.*,**/*.spec.*` (test/spec files anywhere in the repository).
 
 The status helper replaces any existing `status:*` label with the requested status label and preserves all unrelated issue labels. No project, project ID, or project status field is required.
 
-Unmatched entries in `SQUADRON_TEST_PATHS` are ignored, so repositories do not need to contain every default test path. At least one configured path must match files for the tester to stage its changes.
+Unmatched entries in `SQUADRON_TEST_PATHS` are ignored. The tester creates tests with filenames matching these patterns anywhere in the repository; at least one configured pattern must match files for it to stage its changes.
 
 Configure branch protection and required checks. The tester directly merges after its test command succeeds, so any other required checks must already be passing.
