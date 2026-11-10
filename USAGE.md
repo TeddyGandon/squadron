@@ -11,6 +11,8 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 
 The reviewer verdict is posted as a pull request comment; it is not a GitHub approval review. Repository branch protection and required checks remain authoritative.
 
+Pull request labels and merge events are routed by `coder.yml`, the only PR event listener. It invokes only the matching coder, reviewer, or tester job. The tester launches `SQUADRON_TEST_COMMAND`, fixes test-only failures, and reruns it before handoff or merge; the workflow runs it again as the final merge gate.
+
 ## Configuration
 
 Create these repository secrets:

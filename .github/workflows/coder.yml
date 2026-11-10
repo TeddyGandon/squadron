@@ -4,7 +4,8 @@ on:
   issues:
     types: [labeled]
   pull_request:
-    types: [labeled]
+    types: [labeled, reopened, ready_for_review, closed]
+  workflow_call:
 
 permissions:
   contents: read
@@ -90,7 +91,11 @@ jobs:
           gh pr edit "$PR_NUMBER" --add-label agent:reviewer
 
   coder-fix:
-    if: github.event_name == 'pull_request' && github.event.label.name == 'agent:coder' && github.event.pull_request.head.repo.full_name == github.repository
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'agent:coder' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,28 +104,24 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Find linked issue
-        id: issue
+      - name: Find linked issue and load feedback
+        id: context
         env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
         shell: bash
         run: |
           shopt -s nocasematch
           if [[ "$PR_BODY" =~ (close|closes)[[:space:]]+#([0-9]+) ]]; then
-            echo "number=${BASH_REMATCH[2]}" >> "$GITHUB_OUTPUT"
+            issue_number="${BASH_REMATCH[2]}"
+            echo "number=$issue_number" >> "$GITHUB_OUTPUT"
           else
             echo '::error::Pull request body must link its issue with "Closes #123".'
             exit 1
           fi
-
-      - name: Load issue and automation feedback
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          gh issue view "$ISSUE_NUMBER" --json title,body > "$RUNNER_TEMP/issue-requirements.json"
+          gh issue view "$issue_number" --json title,body > "$RUNNER_TEMP/issue-requirements.json"
           gh api "repos/$REPOSITORY/issues/$PR_NUMBER/comments?per_page=100" \
             --jq '[.[] | select((.body | startswith("## Squadron automated review")) or (.body | startswith("Squadron tester failed"))) | {author: .user.login, body: .body}]' \
             > "$RUNNER_TEMP/automation-feedback.json"
@@ -158,9 +159,12 @@ jobs:
           copilot --prompt "$(cat "$prompt_file")" --allow-all-tools \
             --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
-      - name: Commit fixes
+      - name: Commit and push fixes
         env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           if git diff --quiet && git diff --cached --quiet; then
             echo '::error::The coder made no changes to address the feedback.'
@@ -170,30 +174,28 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
           git commit -m "fix: address feedback on pull request #$PR_NUMBER"
-
-      - name: Clear coder queue
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr edit "$PR_NUMBER" --remove-label agent:coder
-
-      - name: Push fixes to existing pull request
-        env:
-          SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          if [[ -z "$SQUADRON_GITHUB_TOKEN" ]]; then
-            echo '::error::SQUADRON_GITHUB_TOKEN is missing. Configure a token with write access to this repository.'
-            exit 1
-          fi
+          gh pr edit "$PR_NUMBER" --remove-label agent:coder
           auth_header="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$SQUADRON_GITHUB_TOKEN" | base64 -w0)"
           if ! git -c http.extraheader="$auth_header" push origin "HEAD:$PR_HEAD_REF"; then
-            echo '::error::Push denied. Check that SQUADRON_GITHUB_TOKEN has Contents: Read and write access to this repository and that repository rules allow this branch update.'
+            echo '::error::Push denied. Check that SQUADRON_GITHUB_TOKEN has Contents: Read and write access and branch rules allow updates.'
             exit 1
           fi
+          gh pr edit "$PR_NUMBER" --add-label agent:reviewer
 
-      - name: Queue reviewer after fixes
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh pr edit "$PR_NUMBER" --add-label agent:reviewer
+  reviewer:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'agent:reviewer') ||
+      github.event.action == 'reopened' || github.event.action == 'ready_for_review')
+    uses: ./.github/workflows/reviewer.yml
+    secrets: inherit
+
+  tester:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      ((github.event.action == 'labeled' && github.event.label.name == 'agent:tester') ||
+      (github.event.action == 'closed' && github.event.pull_request.merged == true))
+    uses: ./.github/workflows/tester.yml
+    secrets: inherit
