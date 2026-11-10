@@ -16,6 +16,9 @@ jobs:
   test:
     if: github.event.action == 'labeled' && github.event.label.name == 'agent:tester' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    env:
+      SQUADRON_TEST_COMMAND: ${{ vars.SQUADRON_TEST_COMMAND || 'npm run test' }}
+      SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || '**/*.test.*,**/*.spec.*' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,8 +77,6 @@ jobs:
         working-directory: product
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
-          SQUADRON_TEST_COMMAND: ${{ vars.SQUADRON_TEST_COMMAND || 'npm run test' }}
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || '**/*.test.*,**/*.spec.*' }}
         run: |
           if [[ -z "$SQUADRON_TEST_COMMAND" || -z "$SQUADRON_TEST_PATHS" ]]; then
             echo '::error::Set SQUADRON_TEST_COMMAND and SQUADRON_TEST_PATHS repository variables.'
@@ -90,7 +91,8 @@ jobs:
           do not infer expected behavior from them. Add or update automated tests with filenames
           matching SQUADRON_TEST_PATHS anywhere in the repository; do not assume tests/ or src/ is
           the only valid location. Ensure the exact SQUADRON_TEST_COMMAND supplied below is configured
-          in the project. If it is an npm run command and that script is missing, add the script to
+          in the project. Treat it as authoritative: do not replace it with a generic or hard-coded
+          command. If it is an npm run command and that script is missing, add the script to
           package.json using the test runner already present; if no runner is present, add a suitable
           test dependency and update the npm lockfile. Do not replace the command with a no-op or
           weaken tests to force a pass. Run the configured command and use its output to verify the
@@ -108,10 +110,36 @@ jobs:
           copilot --prompt "$(cat "$prompt_file")" --allow-all-tools \
             --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
+          npm_script_is_configured() {
+            node -e 'const fs=require("node:fs"); const p=fs.existsSync("package.json") ? JSON.parse(fs.readFileSync("package.json", "utf8")) : {}; const s=p.scripts?.[process.argv[1]]; process.exit(typeof s === "string" && s.trim() ? 0 : 1)' "$1"
+          }
+          if [[ "$SQUADRON_TEST_COMMAND" =~ ^npm[[:space:]]+run[[:space:]]+([^[:space:]]+) ]]; then
+            npm_script_name="${BASH_REMATCH[1]}"
+            if ! npm_script_is_configured "$npm_script_name"; then
+              repair_prompt_file="$RUNNER_TEMP/test-command-repair-prompt.txt"
+              cat > "$repair_prompt_file" <<'PROMPT'
+          The test step is configured to run SQUADRON_TEST_COMMAND, but the corresponding npm
+          script is missing from package.json. Add that exact script using the existing test runner;
+          if none exists, add a real test runner dependency and update the npm lockfile. Do not use
+          a no-op, echo command, or weakened test. Keep changes limited to package.json and npm
+          lockfiles. Run the exact configured command to verify it. Use only the linked issue as
+          the requirements source; do not read documentation or PR discussion.
+
+          Issue title:
+          PROMPT
+              printf '%s\n\nIssue body:\n%s\n\nRequired command:\n%s\n' \
+                "$issue_title" "$issue_body" "$SQUADRON_TEST_COMMAND" >> "$repair_prompt_file"
+              copilot --prompt "$(cat "$repair_prompt_file")" --allow-all-tools \
+                --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
+              if ! npm_script_is_configured "$npm_script_name"; then
+                echo "::error::The tester did not configure npm script '$npm_script_name' required by SQUADRON_TEST_COMMAND."
+                exit 1
+              fi
+            fi
+          fi
+
       - name: Stage only configured test paths
         working-directory: product
-        env:
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || '**/*.test.*,**/*.spec.*' }}
         run: |
           git reset --quiet
           IFS=',' read -r -a configured_paths <<< "$SQUADRON_TEST_PATHS"
@@ -170,8 +198,6 @@ jobs:
       - name: Run test suite
         id: test-suite
         working-directory: product
-        env:
-          SQUADRON_TEST_COMMAND: ${{ vars.SQUADRON_TEST_COMMAND || 'npm run test' }}
         run: |
           set +e
           {
