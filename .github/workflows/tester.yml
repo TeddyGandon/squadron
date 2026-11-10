@@ -75,7 +75,7 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           SQUADRON_TEST_COMMAND: ${{ vars.SQUADRON_TEST_COMMAND || 'npm run test' }}
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/**/*.test.ts' }}
+          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/*.test.ts,src/**/*.test.ts' }}
         run: |
           if [[ -z "$SQUADRON_TEST_COMMAND" || -z "$SQUADRON_TEST_PATHS" ]]; then
             echo '::error::Set SQUADRON_TEST_COMMAND and SQUADRON_TEST_PATHS repository variables.'
@@ -110,17 +110,23 @@ jobs:
       - name: Stage only configured test paths
         working-directory: product
         env:
-          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/**/*.test.ts' }}
+          SQUADRON_TEST_PATHS: ${{ vars.SQUADRON_TEST_PATHS || 'tests,src/*.test.ts,src/**/*.test.ts' }}
         run: |
           git reset --quiet
           IFS=',' read -r -a configured_paths <<< "$SQUADRON_TEST_PATHS"
           matched_test_paths=()
           for pathspec in "${configured_paths[@]}"; do
-            if [[ -n "$(git ls-files --cached --others --exclude-standard -- "$pathspec")" ]]; then
-              matched_test_paths+=("$pathspec")
-            else
-              printf '::notice::Ignoring unmatched test pathspec: %s\n' "$pathspec"
+            candidate_pathspecs=("$pathspec")
+            if [[ "$pathspec" == *'**/'* ]]; then
+              candidate_pathspecs+=("${pathspec/\*\*\//}")
             fi
+            for candidate in "${candidate_pathspecs[@]}"; do
+              if [[ -n "$(git ls-files --cached --others --exclude-standard -- "$candidate")" ]]; then
+                matched_test_paths+=("$candidate")
+              else
+                printf '::notice::Ignoring unmatched test pathspec: %s\n' "$candidate"
+              fi
+            done
           done
           if ((${#matched_test_paths[@]} == 0)); then
             echo '::error::None of SQUADRON_TEST_PATHS match files in this repository.'

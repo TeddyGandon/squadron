@@ -39,7 +39,7 @@ Create these repository labels:
 These repository variables are optional overrides; the values shown are used when they are unset:
 
 - `SQUADRON_TEST_COMMAND`: `npm run test`
-- `SQUADRON_TEST_PATHS`: `tests,src/**/*.test.ts`
+- `SQUADRON_TEST_PATHS`: `tests,src/*.test.ts,src/**/*.test.ts`
 
 The status helper removes existing `status:*` labels and applies the requested status label, preserving unrelated labels. No project, project ID, or project status field is required.
 
