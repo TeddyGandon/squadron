@@ -1,78 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%">
-  <defs>
-    <!-- Wing & Primary Elements Gradient -->
-    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#38bdf8" />
-      <stop offset="50%" stop-color="#0284c7" />
-      <stop offset="100%" stop-color="#0369a1" />
-    </linearGradient>
-
-    <!-- Accent / Code Light Gradient -->
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#bae6fd" />
-      <stop offset="100%" stop-color="#38bdf8" />
-    </linearGradient>
-
-    <!-- Core Glow Effect -->
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="12" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-  </defs>
-
-  <!-- Central Graphic Group -->
-  <g transform="translate(400, 230)">
-    
-    <!-- Outer Flight Wings (V-Formation Squadron Theme) -->
-    <!-- Left Wing Layers -->
-    <path d="M -15 -10 L -130 -100 L -110 -40 L -15 35 Z" fill="url(#primaryGrad)" />
-    <path d="M -15 25 L -100 -25 L -85 10 L -15 65 Z" fill="url(#primaryGrad)" opacity="0.8" />
-    <path d="M -15 55 L -70 15 L -60 40 L -15 85 Z" fill="url(#primaryGrad)" opacity="0.5" />
-
-    <!-- Right Wing Layers -->
-    <path d="M 15 -10 L 130 -100 L 110 -40 L 15 35 Z" fill="url(#primaryGrad)" />
-    <path d="M 15 25 L 100 -25 L 85 10 L 15 65 Z" fill="url(#primaryGrad)" opacity="0.8" />
-    <path d="M 15 55 L 70 15 L 60 40 L 15 85 Z" fill="url(#primaryGrad)" opacity="0.5" />
-
-    <!-- Bottom Shield / Chevron Join -->
-    <path d="M 0 120 L -35 50 L 0 70 L 35 50 Z" fill="url(#primaryGrad)" filter="url(#glow)" />
-
-    <!-- Center Tech Core: Clean Code Brackets -->
-    <g transform="translate(0, 10)" filter="url(#glow)">
-      <!-- Central Glowing Node/Core -->
-      <circle cx="0" cy="0" r="8" fill="#ffffff" />
-
-      <!-- Left Bracket '<' -->
-      <path d="M -35 -25 L -55 0 L -35 25" fill="none" stroke="url(#accentGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
-      
-      <!-- Right Bracket '>' -->
-      <path d="M 35 -25 L 55 0 L 35 25" fill="none" stroke="url(#accentGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
-      
-      <!-- Center Slash '/' -->
-      <line x1="12" y1="-28" x2="-12" y2="28" stroke="url(#accentGrad)" stroke-width="5" stroke-linecap="round" opacity="0.9" />
-    </g>
-
-  </g>
-
-  <!-- Typography -->
-  <g text-anchor="middle">
-    <!-- Brand Name -->
-    <text x="400" y="445" 
-          fill="#ffffff" 
-          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-          font-size="48" 
-          font-weight="900" 
-          letter-spacing="10">SQUADRON</text>
-
-    <!-- Subtitle / Tagline -->
-    <text x="400" y="485" 
-          fill="#0284c7" 
-          font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" 
-          font-size="14" 
-          font-weight="600" 
-          letter-spacing="4">AUTONOMOUS ISSUE-TO-CODE ENGINE</text>
-  </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="800" height="600" viewBox="0 0 800 600" xml:space="preserve">
+<desc>Created with Fabric.js 6.5.3</desc>
+<defs>
+</defs>
+<g transform="matrix(1.6004 0 0 1.6004 402.2513 302.1336)"  >
+<g style=""   >
+		<g transform="matrix(1 0 0 1 -72.5 -111.7621)"  >
+<linearGradient id="SVGID_primaryGrad_0" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_0); fill-rule: nonzero; opacity: 1;"  transform=" translate(72.5, 32.5)" d="M -15 -10 L -130 -100 L -110 -40 L -15 35 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -57.5 -59.2621)"  >
+<linearGradient id="SVGID_primaryGrad_1" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_1); fill-rule: nonzero; opacity: 0.8;"  transform=" translate(57.5, -20)" d="M -15 25 L -100 -25 L -85 10 L -15 65 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 -42.5 -29.2621)"  >
+<linearGradient id="SVGID_primaryGrad_2" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_2); fill-rule: nonzero; opacity: 0.5;"  transform=" translate(42.5, -50)" d="M -15 55 L -70 15 L -60 40 L -15 85 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 72.5 -111.7621)"  >
+<linearGradient id="SVGID_primaryGrad_3" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_3); fill-rule: nonzero; opacity: 1;"  transform=" translate(-72.5, 32.5)" d="M 15 -10 L 130 -100 L 110 -40 L 15 35 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 57.5 -59.2621)"  >
+<linearGradient id="SVGID_primaryGrad_4" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_4); fill-rule: nonzero; opacity: 0.8;"  transform=" translate(-57.5, -20)" d="M 15 25 L 100 -25 L 85 10 L 15 65 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 42.5 -29.2621)"  >
+<linearGradient id="SVGID_primaryGrad_5" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_5); fill-rule: nonzero; opacity: 0.5;"  transform=" translate(-42.5, -50)" d="M 15 55 L 70 15 L 60 40 L 15 85 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 0 5.7379)"  >
+<linearGradient id="SVGID_primaryGrad_6" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+<stop offset="50%" style="stop-color:rgb(2,132,199);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(3,105,161);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: url(#SVGID_primaryGrad_6); fill-rule: nonzero; opacity: 1;"  transform=" translate(0, -85)" d="M 0 120 L -35 50 L 0 70 L 35 50 Z" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 0 -69.2621)"  >
+<circle style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1;"  cx="0" cy="0" r="8" />
+</g>
+		<g transform="matrix(1 0 0 1 -45 -69.2621)"  >
+<linearGradient id="SVGID_accentGrad_7" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" style="stop-color:rgb(186,230,253);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: url(#SVGID_accentGrad_7); stroke-width: 6; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;"  transform=" translate(45, 0)" d="M -35 -25 L -55 0 L -35 25" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 45 -69.2621)"  >
+<linearGradient id="SVGID_accentGrad_8" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" style="stop-color:rgb(186,230,253);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+</linearGradient>
+<path style="stroke: url(#SVGID_accentGrad_8); stroke-width: 6; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: round; stroke-miterlimit: 4; fill: none; fill-rule: nonzero; opacity: 1;"  transform=" translate(-45, 0)" d="M 35 -25 L 55 0 L 35 25" stroke-linecap="round" />
+</g>
+		<g transform="matrix(1 0 0 1 0 -69.2621)"  >
+<linearGradient id="SVGID_accentGrad_9" gradientUnits="objectBoundingBox" gradientTransform="matrix(1 0 0 1 0 0)"  x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" style="stop-color:rgb(186,230,253);stop-opacity: 1"/>
+<stop offset="100%" style="stop-color:rgb(56,189,248);stop-opacity: 1"/>
+</linearGradient>
+<line style="stroke: url(#SVGID_accentGrad_9); stroke-width: 5; stroke-dasharray: none; stroke-linecap: round; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(0,0,0); fill-rule: nonzero; opacity: 0.9;"  x1="12" y1="-28" x2="-12" y2="28" />
+</g>
+		<g transform="matrix(1 0 0 1 -0.0001 120.7007)" style=""  >
+		<text xml:space="preserve" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="48" font-style="normal" font-weight="900" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(255,255,255); fill-rule: nonzero; opacity: 1; white-space: pre;" ><tspan x="-175.2852" y="15.0787" >S</tspan><tspan x="-137.8398" y="15.0787" >Q</tspan><tspan x="-91.1133" y="15.0787" >U</tspan><tspan x="-45.582" y="15.0787" >A</tspan><tspan x="0.418" y="15.0787" >D</tspan><tspan x="46.8398" y="15.0787" >R</tspan><tspan x="89.582" y="15.0787" >O</tspan><tspan x="136.3086" y="15.0787" >N</tspan></text>
+</g>
+		<g transform="matrix(1 0 0 1 0 171.352)" style=""  >
+		<text xml:space="preserve" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-style="normal" font-weight="600" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-dashoffset: 0; stroke-linejoin: miter; stroke-miterlimit: 4; fill: rgb(2,132,199); fill-rule: nonzero; opacity: 1; white-space: pre;" ><tspan x="-189.1787" y="4.398" >A</tspan><tspan x="-175.9912" y="4.398" >U</tspan><tspan x="-162.1475" y="4.398" >T</tspan><tspan x="-151.0039" y="4.398" >O</tspan><tspan x="-136.4219" y="4.398" >N</tspan><tspan x="-121.6826" y="4.398" >O</tspan><tspan x="-107.1006" y="4.398" >M</tspan><tspan x="-90.1602" y="4.398" >O</tspan><tspan x="-75.5781" y="4.398" >U</tspan><tspan x="-61.7344" y="4.398" >S</tspan><tspan x="-50.1123" y="4.398" style="white-space: pre; "> </tspan><tspan x="-42.2637" y="4.398" >I</tspan><tspan x="-34.1826" y="4.398" >S</tspan><tspan x="-22.5605" y="4.398" >S</tspan><tspan x="-10.9385" y="4.398" >U</tspan><tspan x="2.9053" y="4.398" >E</tspan><tspan x="14.1514" y="4.398" >-</tspan><tspan x="23.7773" y="4.398" >T</tspan><tspan x="34.9209" y="4.398" >O</tspan><tspan x="49.5029" y="4.398" >-</tspan><tspan x="59.1289" y="4.398" >C</tspan><tspan x="71.6465" y="4.398" >O</tspan><tspan x="86.2285" y="4.398" >D</tspan><tspan x="100.2705" y="4.398" >E</tspan><tspan x="111.5166" y="4.398" style="white-space: pre; "> </tspan><tspan x="119.3652" y="4.398" >E</tspan><tspan x="130.6113" y="4.398" >N</tspan><tspan x="145.3506" y="4.398" >G</tspan><tspan x="159.1123" y="4.398" >I</tspan><tspan x="167.1934" y="4.398" >N</tspan><tspan x="181.9326" y="4.398" >E</tspan></text>
+</g>
+</g>
+</g>
 </svg>
