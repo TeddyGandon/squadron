@@ -2,36 +2,29 @@
 
 GitHub Actions pipelines for a three-role AI engineering workflow using issue labels, without a GitHub Project dependency.
 
+## Setup
+
+1. Create these repository secrets:
+   - `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is only provided to the Copilot CLI steps.
+   - `SQUADRON_GITHUB_TOKEN`: a fine-grained token for this repository with **Contents**, **Pull requests**, and **Issues** set to **Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, pushes, and merges, because actions taken with the default `GITHUB_TOKEN` do not trigger the next workflow.
+2. Run **Actions → Squadron Setup → Run workflow** once. It creates the `status:*` and `agent:*` labels and checks that both secrets are present and that `SQUADRON_GITHUB_TOKEN` can write to the repository.
+3. Optionally set these repository variables when the defaults do not fit the product:
+   - `SQUADRON_TEST_COMMAND`: defaults to `npm run test`.
+   - `SQUADRON_TEST_PATHS`: comma-separated glob patterns for test files, defaulting to `**/*.test.*,**/*.spec.*` (test and spec files anywhere, including the repository root).
+4. Configure branch protection and required checks as you like. When the tester's direct merge is blocked, for example by required checks still running on its test commit, it enables auto-merge instead, so turn on **Settings → General → Allow auto-merge** if you use required checks.
+
 ## Workflow
 
-1. Add `status:todo` to an issue when work should start. This label automatically triggers the coder; no `agent:coder` label is needed on the issue.
-2. The coder changes the issue status label to `status:in-progress`, implements the issue, updates relevant documentation, opens a pull request, and queues review with `agent:reviewer`.
-3. The reviewer consumes `agent:reviewer` when review starts, checks the code and relevant documentation against the issue, then posts a verdict. A validated pull request changes the issue label to `status:testing` and receives `agent:tester`. A rejected pull request changes the issue label to `status:in-progress` and receives `agent:coder`; after fixing the existing PR, the coder reapplies `agent:reviewer` to queue another review.
-4. The tester uses only the issue title and body as its requirements source, not documentation or prior agent summaries. It adds tests under the configured test paths and ensures `SQUADRON_TEST_COMMAND` works (default `npm run test`). If that npm script is missing, it configures `package.json` to invoke the existing test runner or adds a suitable test dependency and updates the lockfile. It does not weaken tests or change product implementation. The workflow installs dependencies, reruns the command after publishing tests, and only merges after it passes. If it fails, the tester reports the output, returns the issue to `status:in-progress`, and queues the coder on the existing PR. After success, it directly squash-merges the PR. Once GitHub merges the pull request, the issue label changes to `status:done`.
+1. Create an issue from the Feature, Technical task, or Bug form. The form applies `status:todo`, which starts the coder. For other issues, add `status:todo` when the issue is ready.
+2. The coder sets `status:in-progress`, implements the issue, updates relevant documentation, opens a pull request from `squadron/issue-<number>` that contains `Closes #<number>`, and queues review with `agent:reviewer`.
+3. The reviewer checks the code and documentation against the issue and posts a verdict comment. On approval the issue becomes `status:testing` and the PR gets `agent:tester`; otherwise the issue returns to `status:in-progress` and the PR gets `agent:coder`. The coder then fixes the same PR and queues another review.
+4. The tester uses only the issue title and body as its requirements source. It adds or updates tests matching `SQUADRON_TEST_PATHS`, makes sure `SQUADRON_TEST_COMMAND` works (adding a missing npm script or test dependency if needed), and never weakens tests or changes product code. The workflow then reinstalls dependencies and runs the command as the merge gate. On success it squash-merges the PR; on failure it comments the last 80 log lines, returns the issue to `status:in-progress`, and queues the coder.
+5. When the PR is merged, the issue becomes `status:done`.
 
-The reviewer verdict is posted as a pull request comment; it is not a GitHub approval review. Repository branch protection and required checks remain authoritative.
+The reviewer verdict is a pull request comment, not a GitHub approval review. Branch protection and required checks remain authoritative.
 
-Pull request labels and merge events are routed by `coder.yml`, the only PR event listener. It invokes only the matching coder, reviewer, or tester job. The tester launches `SQUADRON_TEST_COMMAND`, fixes test-only failures, and reruns it before handoff or merge; the workflow runs it again as the final merge gate.
+## When something fails
 
-## Configuration
+Every failed run comments on the issue or pull request with a link to the run. To retry, re-apply the label named in the comment: `status:todo` on the issue for the coder, or `agent:coder`, `agent:reviewer`, or `agent:tester` on the pull request.
 
-Create these repository secrets:
-
-- `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is only provided to the Copilot CLI steps.
-- `SQUADRON_GITHUB_TOKEN`: a fine-grained token granted access to this repository with **Contents: Read and write**, **Pull requests: Read and write**, and **Issues: Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, test commits, coder fixes, and merges.
-
-Create these repository labels:
-
-- Agent triggers: `agent:coder`, `agent:reviewer`, `agent:tester`.
-- Issue statuses: `status:todo`, `status:in-progress`, `status:testing`, `status:done`.
-
-Set these optional repository variables when the defaults do not fit the product:
-
-- `SQUADRON_TEST_COMMAND`: defaults to `npm run test`.
-- `SQUADRON_TEST_PATHS`: defaults to `**/*.test.*,**/*.spec.*` (test/spec files anywhere in the repository).
-
-The status helper replaces any existing `status:*` label with the requested status label and preserves all unrelated issue labels. No project, project ID, or project status field is required.
-
-Unmatched entries in `SQUADRON_TEST_PATHS` are ignored. The tester creates tests with filenames matching these patterns anywhere in the repository; at least one configured pattern must match files for it to stage its changes.
-
-Configure branch protection and required checks. The tester directly merges after its test command succeeds, so any other required checks must already be passing.
+Only pull requests from `squadron/issue-<number>` branches in this repository are automated. Pull requests you open yourself are left alone.

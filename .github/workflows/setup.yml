@@ -1,0 +1,54 @@
+name: Squadron Setup
+
+# Run once from the Actions tab after creating a repository from this template.
+# Creates the Squadron labels and checks that the required secrets work.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create labels
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          create() { gh label create "$1" --color "$2" --description "$3" --force; }
+          create status:todo        ededed 'Squadron: ready for the coder'
+          create status:in-progress fbca04 'Squadron: being implemented or fixed'
+          create status:testing     1d76db 'Squadron: approved by the reviewer, in testing'
+          create status:done        0e8a16 'Squadron: merged'
+          create agent:coder        5319e7 'Squadron: queue the coder on this pull request'
+          create agent:reviewer     5319e7 'Squadron: queue the reviewer on this pull request'
+          create agent:tester       5319e7 'Squadron: queue the tester on this pull request'
+
+      - name: Check secrets
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: |
+          failed=0
+          if [[ -z "$COPILOT_GITHUB_TOKEN" ]]; then
+            echo '::error::Missing repository secret COPILOT_GITHUB_TOKEN.'
+            failed=1
+          fi
+          if [[ -z "$SQUADRON_GITHUB_TOKEN" ]]; then
+            echo '::error::Missing repository secret SQUADRON_GITHUB_TOKEN.'
+            failed=1
+          elif [[ "$(GH_TOKEN="$SQUADRON_GITHUB_TOKEN" gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions.push' 2>/dev/null)" != 'true' ]]; then
+            echo '::error::SQUADRON_GITHUB_TOKEN cannot write to this repository. Grant Contents, Pull requests, and Issues read and write access.'
+            failed=1
+          fi
+          if ((failed)); then
+            exit 1
+          fi
+          echo 'Squadron is ready: create an issue from one of the issue forms to start.'

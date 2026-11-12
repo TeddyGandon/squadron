@@ -18,9 +18,11 @@ Issue status is tracked with `status:todo`, `status:in-progress`, `status:testin
 ## Get started
 
 1. Use this repository as a template to create your product repository.
-2. Configure the GitHub secrets and labels described in the [usage guide](USAGE.md).
-3. Configure branch protection and required checks. Required checks other than the tester's command must pass before its direct merge can succeed.
-4. Create an issue with `status:todo` to start the workflow. For manually created issues, add that label when the issue is ready.
+2. Add the `COPILOT_GITHUB_TOKEN` and `SQUADRON_GITHUB_TOKEN` secrets described in the [usage guide](USAGE.md).
+3. Run **Actions → Squadron Setup** once to create the labels and check the secrets.
+4. Create an issue from one of the forms to start the workflow. For manually created issues, add `status:todo` when the issue is ready.
+
+If a step fails, Squadron comments with a link to the run and the label to re-apply to retry.
 
 The repository includes issue forms for feature requests, technical tasks, and bugs. See [USAGE.md](USAGE.md) for setup details and [SQUADRON.md](SQUADRON.md) for template workflow and maintenance context.
 
