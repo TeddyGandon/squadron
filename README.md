@@ -1,4 +1,8 @@
-![Logo](logo.svg)
+<div align="center">
+  
+  ![Logo](logo.svg)
+  
+</div>
 
 # Squadron
 
