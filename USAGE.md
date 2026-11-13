@@ -1,4 +1,8 @@
-![Logo](logo.svg)
+<div align="center">
+  
+  ![Logo](logo.svg)
+  
+</div>
 
 GitHub Actions pipelines for a three-role AI engineering workflow using issue labels, without a GitHub Project dependency.
 
