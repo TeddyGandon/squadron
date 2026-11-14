@@ -1,5 +1,5 @@
 ---
-name: squadron-helper
+name: squadron-requirements-helper
 description: 'Draft or improve a Squadron GitHub issue. Use when someone needs to turn a feature idea, technical task, or bug report into clear, actionable issue content, including clarifying questions about sources, mockups, specifications, reproduction details, and acceptance criteria.'
 argument-hint: 'Describe the issue idea or paste rough notes, links, screenshots, logs, or specifications.'
 user-invocable: true
