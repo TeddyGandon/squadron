@@ -21,6 +21,8 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 
 Run **Actions → Squadron Update → Run workflow** to copy the latest `.github/` contents, `SQUADRON.md`, and `USAGE.md` from the Squadron template's default branch. The workflow commits and pushes the changes as `chore: update Squadron`; if those files already match, it does nothing. This replaces the existing `.github/` directory and the two documents, so customizations in those paths will be overwritten. Other files, including `README.md`, are left unchanged.
 
+See the [changelog](SQUADRON-CHANGELOG.md) to find all the available updates.
+
 ## Workflow
 
 1. Create an issue from the Feature, Technical task, or Bug form. The form applies `status:todo`, which starts the coder. For other issues, add `status:todo` when the issue is ready. The `squadron-requirements-helper` Copilot skill helps draft an issue that passes the coder's requirements check.
