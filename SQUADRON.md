@@ -23,7 +23,7 @@ Any failed job comments on its issue or PR with a run link and the label to re-a
 - `.github/workflows/coder.yml` (workflow name **Squadron**) is the only event listener. It handles `issues: labeled` and `pull_request: labeled|closed`, and starts at most one job per event: `coder` (issue gets `status:todo`), `coder-fix` (`agent:coder`), `reviewer` (`agent:reviewer`), `tester` (`agent:tester`), or `mark-done` (PR merged). PR jobs only run for open, same-repository PRs from `squadron/issue-<number>` branches; the issue number comes from that branch name. Jobs are serialized per issue and per PR with job-level concurrency groups.
 - `.github/workflows/reviewer.yml` and `.github/workflows/tester.yml` are reusable role workflows called by coder.yml, not direct event listeners.
 - `.github/workflows/setup.yml` is a manual one-time workflow that creates labels and checks secrets.
-- `.github/workflows/update.yml` is a manual workflow that replaces `.github/`, `SQUADRON.md`, and `USAGE.md` with the latest template versions, then commits and pushes changes.
+- `.github/workflows/update.yml` is a manual workflow that first updates itself: if the template's `update.yml` differs, it commits it (`chore: update Squadron update workflow`), relaunches itself with `workflow_dispatch` using the default `GITHUB_TOKEN` (`actions: write`), and stops. Otherwise it copies an explicit list of template files (the Squadron files under `.github/`, `SQUADRON.md`, `SQUADRON-CHANGELOG.md`, `USAGE.md`), then commits and pushes changes as `chore: update Squadron`.
 - `.github/scripts/set-issue-status-label.sh` replaces the issue's `status:*` label with the requested one while preserving unrelated labels.
 - `.github/scripts/set-agent-label.sh` removes every `agent:*` label from a PR and optionally adds one, which fires the `labeled` event that starts the next agent.
 - `.github/scripts/extract-requirements-report.py` extracts the requirements check's JSON verdict (`ready`, `missing_requirements`) from Copilot output and renders the missing-requirements issue comment. A `ready: false` verdict with no listed requirement counts as ready.
@@ -41,7 +41,7 @@ See [USAGE.md](USAGE.md#setup) for secrets, the setup workflow, and optional var
 - Labels: `agent:coder`, `agent:reviewer`, `agent:tester`, `status:todo`, `status:in-progress`, `status:testing`, `status:done`. The issue forms only apply `status:todo` if it exists, so run the setup workflow first.
 - Variables: `SQUADRON_TEST_COMMAND` (default `npm run test`), `SQUADRON_TEST_PATHS` (default `**/*.test.*,**/*.spec.*`, git glob patterns).
 
-`SQUADRON_GITHUB_TOKEN` is used for automation writes and by the update workflow, which needs Workflows permission to replace workflow files. The default `GITHUB_TOKEN` is used for setup labels and the coder's missing-requirements status update, which intentionally does not re-trigger the coder.
+`SQUADRON_GITHUB_TOKEN` is used for automation writes and by the update workflow, which needs Workflows permission to replace workflow files. The default `GITHUB_TOKEN` is used to relaunch the update workflow after it updates itself (`workflow_dispatch` is allowed from `GITHUB_TOKEN`), for setup labels, and for the coder's missing-requirements status update, which intentionally does not re-trigger the coder.
 
 ## Security and Operating Boundaries
 
@@ -56,7 +56,7 @@ See [USAGE.md](USAGE.md#setup) for secrets, the setup workflow, and optional var
 
 - Keep this document focused on the reusable template. Product-specific behavior belongs in the generated product's documentation.
 - `README.md` is product-facing and may be replaced during product creation; do not rely on it as the sole copy of these template instructions.
-- The manual update workflow replaces the entire `.github/` directory and `SQUADRON.md` and `USAGE.md`; product repositories should keep customizations elsewhere or expect them to be overwritten.
+- The manual update workflow overwrites only the files listed in `update.yml`; product repositories should keep customizations elsewhere or expect them to be overwritten. When adding, renaming, or removing a template file that products must receive, update that list (the self-update step guarantees products run the new list). Files removed from the template are not deleted from products.
 - When changing coder.yml routing, role workflows, labels, status transitions, token use, comment prefixes, or defaults, update this document and USAGE.md and keep the workflows and helper scripts consistent.
 - The requirements check comment prefix is `## Squadron requirements check`. Keep the checker skill, `extract-requirements-report.py`, and the coder prompt in sync when changing the verdict format.
 - The coder-fix job selects feedback by the comment prefixes `## Squadron automated review` and `Squadron tester failed`; keep them in sync with the reviewer and tester.

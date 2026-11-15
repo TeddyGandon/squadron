@@ -19,7 +19,12 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 
 ## Update from the template
 
-Run **Actions → Squadron Update → Run workflow** to copy the latest `.github/` contents, `SQUADRON.md`, and `USAGE.md` from the Squadron template's default branch. The workflow commits and pushes the changes as `chore: update Squadron`; if those files already match, it does nothing. This replaces the existing `.github/` directory and the two documents, so customizations in those paths will be overwritten. Other files, including `README.md`, are left unchanged.
+Run **Actions → Squadron Update → Run workflow** to copy the latest Squadron files from the Squadron template's default branch.
+
+1. The workflow first compares its own file (`.github/workflows/update.yml`) with the template's. If it changed, it commits the new version as `chore: update Squadron update workflow`, relaunches itself, and stops; the relaunched run performs the update with the new version.
+2. Otherwise it copies the template files explicitly listed in the workflow (the Squadron issue forms, scripts, skills, and workflows under `.github/`, plus `SQUADRON.md`, `SQUADRON-CHANGELOG.md`, and `USAGE.md`), then commits and pushes the changes as `chore: update Squadron`. If those files already match, it does nothing.
+
+The listed files are overwritten, so customizations in them will be lost. Other files, including your own files under `.github/` and `README.md`, are left unchanged. Files removed from the template are not deleted from your repository.
 
 See the [changelog](SQUADRON-CHANGELOG.md) to find all the available updates.
 

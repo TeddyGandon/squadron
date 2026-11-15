@@ -2,6 +2,8 @@
 
 ## 2026-11-15
 
+- The **Squadron Update** workflow now updates itself first: if its own file changed in the template, it commits the new version and relaunches itself to finish the update.
+- The update now copies an explicit list of template files instead of replacing the whole `.github/` directory, so your own `.github/` files are kept. It also commits `SQUADRON-CHANGELOG.md`, which was copied but not committed before.
 - Added the manual **Squadron Update** workflow to sync the template's `.github/`, `SQUADRON.md`, and `USAGE.md` into product repositories and commit changes as `chore: update Squadron`.
 - Documented the update process and its overwrite behavior; updated setup guidance for the token's Workflows permission.
 - Added a changelog to understand the updates.
