@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: write
   contents: write
 
 defaults:
@@ -25,21 +26,71 @@ jobs:
           path: template
           persist-credentials: false
 
-      - name: Replace template files and commit
+      - name: Configure git
         working-directory: product
         run: |
-          rsync -a --delete "$GITHUB_WORKSPACE/template/.github/" .github/
-          cp "$GITHUB_WORKSPACE/template/SQUADRON.md" SQUADRON.md
-          cp "$GITHUB_WORKSPACE/template/SQUADRON-CHANGELOG.md" SQUADRON-CHANGELOG.md
-          cp "$GITHUB_WORKSPACE/template/USAGE.md" USAGE.md
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-          git add -A -- .github SQUADRON.md USAGE.md
+      # Update this workflow first. When it changed, commit it and relaunch the
+      # new version so the rest of the update runs with the latest file list.
+      - name: Update the update workflow
+        id: self
+        working-directory: product
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          workflow=.github/workflows/update.yml
+          if cmp -s "$GITHUB_WORKSPACE/template/$workflow" "$workflow"; then
+            echo 'relaunched=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          cp "$GITHUB_WORKSPACE/template/$workflow" "$workflow"
+          git add -- "$workflow"
+          git commit -m 'chore: update Squadron update workflow'
+          git push origin "HEAD:$GITHUB_REF_NAME"
+          gh workflow run update.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+          echo 'relaunched=true' >> "$GITHUB_OUTPUT"
+          echo '::notice::The update workflow changed: it was updated and relaunched to finish the update.'
+
+      - name: Copy template files and commit
+        if: steps.self.outputs.relaunched != 'true'
+        working-directory: product
+        run: |
+          # Explicit list of the template files to copy. Other files, including
+          # other files under .github/, are left untouched.
+          files=(
+            .github/ISSUE_TEMPLATE/bug.yml
+            .github/ISSUE_TEMPLATE/feature.yml
+            .github/ISSUE_TEMPLATE/technical-task.yml
+            .github/scripts/extract-requirements-report.py
+            .github/scripts/extract-review-report.py
+            .github/scripts/install-dependencies.sh
+            .github/scripts/set-agent-label.sh
+            .github/scripts/set-issue-status-label.sh
+            .github/skills/squadron-requirements-checker/SKILL.md
+            .github/skills/squadron-requirements-helper/SKILL.md
+            .github/workflows/coder.yml
+            .github/workflows/reviewer.yml
+            .github/workflows/setup.yml
+            .github/workflows/tester.yml
+            .github/workflows/update.yml
+            SQUADRON.md
+            SQUADRON-CHANGELOG.md
+            USAGE.md
+          )
+
+          for file in "${files[@]}"; do
+            mkdir -p "$(dirname "$file")"
+            cp --preserve=mode "$GITHUB_WORKSPACE/template/$file" "$file"
+          done
+
+          git add -- "${files[@]}"
           if git diff --cached --quiet; then
             echo '::notice::The repository already has the latest Squadron template files.'
             exit 0
           fi
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m "chore: update Squadron"
+          git commit -m 'chore: update Squadron'
           git push origin "HEAD:$GITHUB_REF_NAME"
