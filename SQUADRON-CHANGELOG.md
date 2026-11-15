@@ -1,7 +1,5 @@
 # Squadron Changelog
 
-This changelog summarizes the repository's commit history through 2026-11-15.
-
 ## 2026-11-15
 
 - Added the manual **Squadron Update** workflow to sync the template's `.github/`, `SQUADRON.md`, and `USAGE.md` into product repositories and commit changes as `chore: update Squadron`.
