@@ -30,6 +30,7 @@ jobs:
         run: |
           rsync -a --delete "$GITHUB_WORKSPACE/template/.github/" .github/
           cp "$GITHUB_WORKSPACE/template/SQUADRON.md" SQUADRON.md
+          cp "$GITHUB_WORKSPACE/template/SQUADRON-CHANGELOG.md" SQUADRON-CHANGELOG.md
           cp "$GITHUB_WORKSPACE/template/USAGE.md" USAGE.md
 
           git add -A -- .github SQUADRON.md USAGE.md
