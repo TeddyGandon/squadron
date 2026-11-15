@@ -26,6 +26,8 @@ Issue status is tracked with `status:todo`, `status:in-progress`, `status:testin
 3. Run **Actions → Squadron Setup** once to create the labels and check the secrets.
 4. Create an issue from one of the forms to start the workflow. For manually created issues, add `status:todo` when the issue is ready.
 
+To update the workflow files and template guides later, run **Actions → Squadron Update**. It replaces `.github/`, `SQUADRON.md`, and `USAGE.md` with the latest template versions.
+
 If a step fails, Squadron comments with a link to the run and the label to re-apply to retry.
 
 The repository includes issue forms for feature requests, technical tasks, and bugs. See [USAGE.md](USAGE.md) for setup details and [SQUADRON.md](SQUADRON.md) for template workflow and maintenance context.

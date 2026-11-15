@@ -1,0 +1,44 @@
+name: Squadron Update
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: product
+          token: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+
+      - uses: actions/checkout@v4
+        with:
+          repository: TeddyGandon/squadron
+          path: template
+          persist-credentials: false
+
+      - name: Replace template files and commit
+        working-directory: product
+        run: |
+          rsync -a --delete "$GITHUB_WORKSPACE/template/.github/" .github/
+          cp "$GITHUB_WORKSPACE/template/SQUADRON.md" SQUADRON.md
+          cp "$GITHUB_WORKSPACE/template/USAGE.md" USAGE.md
+
+          git add -A -- .github SQUADRON.md USAGE.md
+          if git diff --cached --quiet; then
+            echo '::notice::The repository already has the latest Squadron template files.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "chore: update Squadron"
+          git push origin "HEAD:$GITHUB_REF_NAME"

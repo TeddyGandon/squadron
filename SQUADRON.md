@@ -23,6 +23,7 @@ Any failed job comments on its issue or PR with a run link and the label to re-a
 - `.github/workflows/coder.yml` (workflow name **Squadron**) is the only event listener. It handles `issues: labeled` and `pull_request: labeled|closed`, and starts at most one job per event: `coder` (issue gets `status:todo`), `coder-fix` (`agent:coder`), `reviewer` (`agent:reviewer`), `tester` (`agent:tester`), or `mark-done` (PR merged). PR jobs only run for open, same-repository PRs from `squadron/issue-<number>` branches; the issue number comes from that branch name. Jobs are serialized per issue and per PR with job-level concurrency groups.
 - `.github/workflows/reviewer.yml` and `.github/workflows/tester.yml` are reusable role workflows called by coder.yml, not direct event listeners.
 - `.github/workflows/setup.yml` is a manual one-time workflow that creates labels and checks secrets.
+- `.github/workflows/update.yml` is a manual workflow that replaces `.github/`, `SQUADRON.md`, and `USAGE.md` with the latest template versions, then commits and pushes changes.
 - `.github/scripts/set-issue-status-label.sh` replaces the issue's `status:*` label with the requested one while preserving unrelated labels.
 - `.github/scripts/set-agent-label.sh` removes every `agent:*` label from a PR and optionally adds one, which fires the `labeled` event that starts the next agent.
 - `.github/scripts/extract-requirements-report.py` extracts the requirements check's JSON verdict (`ready`, `missing_requirements`) from Copilot output and renders the missing-requirements issue comment. A `ready: false` verdict with no listed requirement counts as ready.
@@ -36,17 +37,17 @@ Every job checks out the default branch to `squadron/` and runs helper scripts f
 
 See [USAGE.md](USAGE.md#setup) for secrets, the setup workflow, and optional variables:
 
-- Secrets: `COPILOT_GITHUB_TOKEN`, `SQUADRON_GITHUB_TOKEN` (Contents, Pull requests, Issues: Read and write).
+- Secrets: `COPILOT_GITHUB_TOKEN`, `SQUADRON_GITHUB_TOKEN` (Contents, Pull requests, Issues, Workflows: Read and write).
 - Labels: `agent:coder`, `agent:reviewer`, `agent:tester`, `status:todo`, `status:in-progress`, `status:testing`, `status:done`. The issue forms only apply `status:todo` if it exists, so run the setup workflow first.
 - Variables: `SQUADRON_TEST_COMMAND` (default `npm run test`), `SQUADRON_TEST_PATHS` (default `**/*.test.*,**/*.spec.*`, git glob patterns).
 
-`SQUADRON_GITHUB_TOKEN` is used for every write so its actions trigger the next workflow. The default `GITHUB_TOKEN` stays read-only except for labels: it creates them in the setup workflow, and the coder job (granted `issues: write`) uses it to return an issue with missing requirements to `status:todo`, precisely so that this label change does not re-trigger the coder.
+`SQUADRON_GITHUB_TOKEN` is used for automation writes and by the update workflow, which needs Workflows permission to replace workflow files. The default `GITHUB_TOKEN` is used for setup labels and the coder's missing-requirements status update, which intentionally does not re-trigger the coder.
 
 ## Security and Operating Boundaries
 
 - Apply `status:todo` only to issues that should be processed. Copilot CLI can edit files and run tools, but `SQUADRON_GITHUB_TOKEN` is never present in a Copilot step, and `COPILOT_GITHUB_TOKEN` is stripped from Copilot's shell environment with `--secret-env-vars`.
 - Fork PRs and PRs from other branches are never given the automation credentials.
-- Agent changes under `.github/workflows` are discarded before publishing, so the token does not need the Workflows permission.
+- Agent changes under `.github/workflows` are discarded before publishing; the manual update workflow uses `SQUADRON_GITHUB_TOKEN` with Workflows permission to sync the template.
 - The tester commits only files matching `SQUADRON_TEST_PATHS` (excluding `node_modules`) plus `package.json` and npm lockfiles; other working-tree changes are discarded.
 - The reviewer result is model-generated. Treat it as automation feedback, not a substitute for required human review or branch protection.
 - An issue becomes `status:done` only after its PR actually merges.
@@ -55,6 +56,7 @@ See [USAGE.md](USAGE.md#setup) for secrets, the setup workflow, and optional var
 
 - Keep this document focused on the reusable template. Product-specific behavior belongs in the generated product's documentation.
 - `README.md` is product-facing and may be replaced during product creation; do not rely on it as the sole copy of these template instructions.
+- The manual update workflow replaces the entire `.github/` directory and `SQUADRON.md` and `USAGE.md`; product repositories should keep customizations elsewhere or expect them to be overwritten.
 - When changing coder.yml routing, role workflows, labels, status transitions, token use, comment prefixes, or defaults, update this document and USAGE.md and keep the workflows and helper scripts consistent.
 - The requirements check comment prefix is `## Squadron requirements check`. Keep the checker skill, `extract-requirements-report.py`, and the coder prompt in sync when changing the verdict format.
 - The coder-fix job selects feedback by the comment prefixes `## Squadron automated review` and `Squadron tester failed`; keep them in sync with the reviewer and tester.

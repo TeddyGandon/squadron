@@ -45,7 +45,7 @@ jobs:
             echo '::error::Missing repository secret SQUADRON_GITHUB_TOKEN.'
             failed=1
           elif [[ "$(GH_TOKEN="$SQUADRON_GITHUB_TOKEN" gh api "repos/$GITHUB_REPOSITORY" --jq '.permissions.push' 2>/dev/null)" != 'true' ]]; then
-            echo '::error::SQUADRON_GITHUB_TOKEN cannot write to this repository. Grant Contents, Pull requests, and Issues read and write access.'
+            echo '::error::SQUADRON_GITHUB_TOKEN cannot write to this repository. Grant Contents, Pull requests, Issues, and Workflows read and write access.'
             failed=1
           fi
           if ((failed)); then

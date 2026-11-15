@@ -10,12 +10,16 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 
 1. Create these repository secrets:
    - `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is only provided to the Copilot CLI steps.
-   - `SQUADRON_GITHUB_TOKEN`: a fine-grained token for this repository with **Contents**, **Pull requests**, and **Issues** set to **Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, pushes, and merges, because actions taken with the default `GITHUB_TOKEN` do not trigger the next workflow.
+   - `SQUADRON_GITHUB_TOKEN`: a fine-grained token for this repository with **Contents**, **Pull requests**, **Issues**, and **Workflows** set to **Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, pushes, and merges; the update workflow also needs **Workflows** permission to replace workflow files.
 2. Run **Actions → Squadron Setup → Run workflow** once. It creates the `status:*` and `agent:*` labels and checks that both secrets are present and that `SQUADRON_GITHUB_TOKEN` can write to the repository.
 3. Optionally set these repository variables when the defaults do not fit the product:
    - `SQUADRON_TEST_COMMAND`: defaults to `npm run test`.
    - `SQUADRON_TEST_PATHS`: comma-separated glob patterns for test files, defaulting to `**/*.test.*,**/*.spec.*` (test and spec files anywhere, including the repository root).
 4. Configure branch protection and required checks as you like. When the tester's direct merge is blocked, for example by required checks still running on its test commit, it enables auto-merge instead, so turn on **Settings → General → Allow auto-merge** if you use required checks.
+
+## Update from the template
+
+Run **Actions → Squadron Update → Run workflow** to copy the latest `.github/` contents, `SQUADRON.md`, and `USAGE.md` from the Squadron template's default branch. The workflow commits and pushes the changes as `chore: update Squadron`; if those files already match, it does nothing. This replaces the existing `.github/` directory and the two documents, so customizations in those paths will be overwritten. Other files, including `README.md`, are left unchanged.
 
 ## Workflow
 
