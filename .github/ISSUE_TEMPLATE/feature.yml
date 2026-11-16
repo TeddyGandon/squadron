@@ -1,7 +1,7 @@
 name: Feature
 description: Propose a new feature or user-facing improvement.
 title: "[Feature]: "
-labels: ["status:todo"]
+labels: []
 body:
   - type: markdown
     attributes:
