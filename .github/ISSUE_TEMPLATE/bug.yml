@@ -1,7 +1,7 @@
 name: Bug report
 description: Report incorrect or unexpected product behavior.
 title: "[Bug]: "
-labels: ["status:todo"]
+labels: []
 body:
   - type: markdown
     attributes:
