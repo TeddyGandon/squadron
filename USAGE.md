@@ -40,7 +40,7 @@ The reviewer verdict is a pull request comment, not a GitHub approval review. Br
 
 ## When something fails
 
-Every failed run comments on the issue or pull request with a link to the run. To retry, re-apply the label named in the comment: `status:todo` on the issue for the coder, or `agent:coder`, `agent:reviewer`, or `agent:tester` on the pull request.
+Every failed run comments on the issue or pull request with a link to the run. To retry, re-apply the label named in the comment: `status:todo` on the issue for the coder, or `agent:coder`, `agent:reviewer`, or `agent:tester` on the pull request. If the coder fix made no changes, re-applying `agent:coder` would repeat the same result: resolve the remaining findings yourself (or update the issue), then re-apply `agent:reviewer`.
 
 Only pull requests from `squadron/issue-<number>` branches in this repository are automated. Pull requests you open yourself are left alone.
 

@@ -16,7 +16,7 @@ Squadron is a GitHub Actions template for a product workflow run by three AI eng
 
 The reviewer verdict is a PR comment, not a formal GitHub approval review. Branch protection and required checks remain authoritative.
 
-Any failed job comments on its issue or PR with a run link and the label to re-apply to retry. Because every agent consumes its trigger label when it starts, re-applying the label is always enough to retry.
+Any failed job comments on its issue or PR with a run link and the label to re-apply to retry. Because every agent consumes its trigger label when it starts, re-applying the label is always enough to retry. The exception is a coder fix that made no changes: retrying would repeat the same result, so its comment asks a person to resolve the remaining findings and re-apply `agent:reviewer`.
 
 ## Workflow Ownership
 

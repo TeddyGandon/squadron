@@ -3,6 +3,7 @@
 ## 2026-11-17
 
 - Fixed a loop where the reviewer asked for a GitHub Actions workflow change that agents are not allowed to make, so the coder fix failed with no changes. The requirements check now returns issues that need workflow files to `status:todo` unless that part is marked out of scope or manual, and the reviewer reports missing workflow changes as a manual follow-up instead of a blocking finding.
+- The reviewer also ignores requirements that only a workflow can meet (automatic CI, tagging, releases, deployments), not just missing workflow files. When the coder fix makes no changes, its comment now says to resolve the findings manually and re-apply `agent:reviewer` instead of retrying `agent:coder`.
 - The requirements helper skill now warns when an issue needs a workflow file and helps scope it accordingly.
 
 ## 2026-11-15
