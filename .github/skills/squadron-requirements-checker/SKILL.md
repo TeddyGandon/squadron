@@ -60,6 +60,7 @@ A gap is **blocking** only if at least one is true:
 - The tester could not write a test that decides pass or fail from the issue alone.
 - It conflicts with the repository or with itself in a way that changes the result.
 - It depends on information the agents cannot access.
+- It requires work the agents are not allowed to deliver (see "Squadron limits").
 
 A gap is **not blocking**, and must not be reported, when:
 
@@ -69,6 +70,12 @@ A gap is **not blocking**, and must not be reported, when:
 - it is speculative ("what if one day...") or outside the stated scope.
 
 Be strict about real ambiguity and lenient about everything else. Do not invent requirements, and do not ask for information the issue already provides.
+
+## Squadron limits
+
+Squadron agents never publish changes under `.github/workflows`: any edit there is discarded before the pull request is opened or updated. An issue is therefore not ready when any required outcome or acceptance criterion depends on creating, changing, or deleting a GitHub Actions workflow file (for example a CI, release, deployment, or scheduled pipeline that must run on GitHub events), unless the issue explicitly says that part is out of scope or will be done by a person.
+
+Report it as one blocking entry with the topic `Workflow changes`. Ask the author to either narrow the scope to what can be delivered without workflow files (scripts, configuration, documentation, or an example workflow stored outside `.github/workflows`) or state that a person will add or change the workflow after the pull request merges. Do not report it when the workflow part is already marked out of scope or manual.
 
 ## Output
 
