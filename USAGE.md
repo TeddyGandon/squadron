@@ -43,3 +43,7 @@ The reviewer verdict is a pull request comment, not a GitHub approval review. Br
 Every failed run comments on the issue or pull request with a link to the run. To retry, re-apply the label named in the comment: `status:todo` on the issue for the coder, or `agent:coder`, `agent:reviewer`, or `agent:tester` on the pull request.
 
 Only pull requests from `squadron/issue-<number>` branches in this repository are automated. Pull requests you open yourself are left alone.
+
+## What agents cannot change
+
+Agents never publish changes under `.github/workflows`. If an issue needs a GitHub Actions workflow (for example CI, releases, or deployments), the coder's requirements check returns it to `status:todo` until the issue either limits the scope to what agents can deliver (scripts, configuration, documentation, or an example workflow stored outside `.github/workflows`) or states that a person will add the workflow. The reviewer does not block a pull request for a missing workflow change; it mentions it as a manual follow-up. Add or change workflow files yourself.

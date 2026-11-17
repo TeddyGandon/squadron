@@ -47,7 +47,7 @@ See [USAGE.md](USAGE.md#setup) for secrets, the setup workflow, and optional var
 
 - Apply `status:todo` only to issues that should be processed. Copilot CLI can edit files and run tools, but `SQUADRON_GITHUB_TOKEN` is never present in a Copilot step, and `COPILOT_GITHUB_TOKEN` is stripped from Copilot's shell environment with `--secret-env-vars`.
 - Fork PRs and PRs from other branches are never given the automation credentials.
-- Agent changes under `.github/workflows` are discarded before publishing; the manual update workflow uses `SQUADRON_GITHUB_TOKEN` with Workflows permission to sync the template.
+- Agent changes under `.github/workflows` are discarded before publishing. The requirements checker therefore treats an issue whose required outcome needs a workflow file as not ready, unless the issue marks that part out of scope or manual, and the reviewer never blocks a PR for a missing workflow change (it notes it as a manual follow-up). Keep the checker skill, the requirements helper skill, and the reviewer prompt consistent with this rule. The manual update workflow uses `SQUADRON_GITHUB_TOKEN` with Workflows permission to sync the template.
 - The tester commits only files matching `SQUADRON_TEST_PATHS` (excluding `node_modules`) plus `package.json` and npm lockfiles; other working-tree changes are discarded.
 - The reviewer result is model-generated. Treat it as automation feedback, not a substitute for required human review or branch protection.
 - An issue becomes `status:done` only after its PR actually merges.

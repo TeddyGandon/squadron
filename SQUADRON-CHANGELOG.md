@@ -1,5 +1,10 @@
 # Squadron Changelog
 
+## 2026-11-17
+
+- Fixed a loop where the reviewer asked for a GitHub Actions workflow change that agents are not allowed to make, so the coder fix failed with no changes. The requirements check now returns issues that need workflow files to `status:todo` unless that part is marked out of scope or manual, and the reviewer reports missing workflow changes as a manual follow-up instead of a blocking finding.
+- The requirements helper skill now warns when an issue needs a workflow file and helps scope it accordingly.
+
 ## 2026-11-15
 
 - The **Squadron Update** workflow now updates itself first: if its own file changed in the template, it commits the new version and relaunches itself to finish the update.
