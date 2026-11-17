@@ -26,6 +26,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      actions: write
     concurrency:
       group: squadron-issue-${{ github.event.issue.number }}
     env:
@@ -178,6 +179,10 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: squadron-pr-${{ github.event.pull_request.number }}
+    permissions:
+      contents: read
+      issues: write
+      actions: write
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
