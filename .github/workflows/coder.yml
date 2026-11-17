@@ -177,12 +177,12 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.event.pull_request.head.ref, 'squadron/issue-')
     runs-on: ubuntu-latest
-    concurrency:
-      group: squadron-pr-${{ github.event.pull_request.number }}
     permissions:
       contents: read
       issues: write
       actions: write
+    concurrency:
+      group: squadron-pr-${{ github.event.pull_request.number }}
     env:
       PR_NUMBER: ${{ github.event.pull_request.number }}
       PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
