@@ -200,7 +200,8 @@ jobs:
           path: squadron
           persist-credentials: false
 
-      - name: Start fix and load feedback
+      - name: Start and load feedback
+        id: feedback
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           AGENT_LABEL: ''
@@ -208,19 +209,49 @@ jobs:
           bash "$HELPERS/set-agent-label.sh"
           gh issue view "${PR_HEAD_REF#squadron/issue-}" --repo "$GITHUB_REPOSITORY" \
             --json title,body > "$RUNNER_TEMP/issue.json"
-          # Only the most recent reviewer or tester report is relevant to this fix.
+          # Only the most recent reviewer or tester report decides what the coder does. Only
+          # comments posted with SQUADRON_GITHUB_TOKEN count, so nobody else can request a merge.
+          SQUADRON_LOGIN="$(gh api user --jq '.login')"
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
-            --jq '.[] | select(.body | startswith("## Squadron automated review") or startswith("Squadron tester failed")) | .body | @json' \
+            --jq ".[] | select(.user.login == \"$SQUADRON_LOGIN\") | select(.body | startswith(\"## Squadron automated review\") or startswith(\"Squadron tester failed\") or startswith(\"Squadron tester passed\")) | .body | @json" \
             | tail -n 1 | jq -r '.' > "$RUNNER_TEMP/feedback.md"
+          # A tester pass means the coder merges the commit the tester validated instead of fixing.
+          if [[ "$(head -n 1 "$RUNNER_TEMP/feedback.md")" == 'Squadron tester passed'* ]]; then
+            echo 'mode=merge' >> "$GITHUB_OUTPUT"
+            echo "tested-sha=$(head -n 1 "$RUNNER_TEMP/feedback.md" | grep -oE '[0-9a-f]{40}' | head -n 1)" >> "$GITHUB_OUTPUT"
+          else
+            echo 'mode=fix' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Squash merge pull request
+        if: steps.feedback.outputs.mode == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          TESTED_SHA: ${{ steps.feedback.outputs.tested-sha }}
+        run: |
+          if [[ -z "$TESTED_SHA" ]]; then
+            echo '::error::The tester pass comment does not name the tested commit.'
+            exit 1
+          fi
+          # --match-head-commit refuses the merge if the branch moved after the tester passed.
+          if ! gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch \
+            --match-head-commit "$TESTED_SHA"; then
+            echo '::notice::Direct merge is blocked (for example by pending required checks); enabling auto-merge.'
+            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --auto \
+              --match-head-commit "$TESTED_SHA"
+          fi
 
       - uses: actions/setup-node@v4
+        if: steps.feedback.outputs.mode == 'fix'
         with:
           node-version: 22
 
       - name: Install Copilot CLI
+        if: steps.feedback.outputs.mode == 'fix'
         run: npm install --global @github/copilot@1.0.105
 
       - name: Address review or test feedback
+        if: steps.feedback.outputs.mode == 'fix'
         working-directory: product
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
@@ -250,6 +281,7 @@ jobs:
             --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
       - name: Commit and push fixes
+        if: steps.feedback.outputs.mode == 'fix'
         working-directory: product
         env:
           SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
@@ -269,6 +301,7 @@ jobs:
             "HEAD:$PR_HEAD_REF"
 
       - name: Queue reviewer
+        if: steps.feedback.outputs.mode == 'fix'
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           AGENT_LABEL: agent:reviewer
@@ -278,9 +311,13 @@ jobs:
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          MODE: ${{ steps.feedback.outputs.mode }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          if [[ -f "$RUNNER_TEMP/no-changes" ]]; then
+          if [[ "$MODE" == 'merge' ]]; then
+            gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+              "Squadron coder could not merge the pull request. See the [workflow run]($RUN_URL). If the branch changed after the tester passed, re-apply \`agent:tester\`; otherwise re-apply \`agent:coder\` to retry the merge."
+          elif [[ -f "$RUNNER_TEMP/no-changes" ]]; then
             gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
               "Squadron coder made no changes for the latest feedback, so retrying \`agent:coder\` will not help. See the [workflow run]($RUN_URL) for its explanation. If the remaining findings need changes the agents cannot make (such as files under \`.github/workflows\`), make them yourself or update the issue, then re-apply \`agent:reviewer\`."
           else
