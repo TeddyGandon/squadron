@@ -15,7 +15,8 @@ Squadron turns labeled GitHub issues into a coordinated implementation, review, 
 1. **Start with an issue.** Choose a Feature, Technical task, or Bug form. Each form applies `status:todo`, which starts the coder automatically.
 2. **Implement.** The coder first checks that the issue's requirements leave no doubt; if not, it comments the missing requirements and returns the issue to `status:todo`. Otherwise it updates relevant documentation, implements the issue, and opens a pull request.
 3. **Review.** The reviewer checks the code and documentation against the issue. It queues the tester on approval or returns the same pull request to the coder when changes are needed.
-4. **Test and merge.** The tester uses the issue as its requirements source, runs the configured test command, and squash-merges after success. A failure returns the pull request to the coder.
+4. **Test.** The tester uses the issue as its requirements source and runs the configured test command. Success or failure, it returns the pull request to the coder.
+5. **Merge.** After a successful test run, the coder squash-merges the pull request. If it conflicts with the base branch, the coder resolves the conflicts first and sends the pull request back through review and testing.
 
 Issue status is tracked with `status:todo`, `status:in-progress`, `status:testing`, and `status:done`. Agent handoffs use `agent:coder`, `agent:reviewer`, and `agent:tester`.
 

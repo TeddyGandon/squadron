@@ -1,5 +1,11 @@
 # Squadron Changelog
 
+## 2026-11-18
+
+- The coder now merges pull requests instead of the tester. When the tests pass, the tester comments `Squadron tester passed` with the tested commit and queues the coder, which squash-merges that commit (or enables auto-merge). It refuses to merge if the branch changed after the tests passed.
+- Before merging, the coder checks for conflicts with the base branch. It resolves them, pushes a merge commit, comments the conflicting files, and sends the pull request back through review and testing. Conflicts in `.github/workflows` are left to a person.
+- The coder now only follows Squadron comments posted with `SQUADRON_GITHUB_TOKEN`, so other users' comments cannot steer it.
+
 ## 2026-11-17
 
 - Fixed a loop where the reviewer asked for a GitHub Actions workflow change that agents are not allowed to make, so the coder fix failed with no changes. The requirements check now returns issues that need workflow files to `status:todo` unless that part is marked out of scope or manual, and the reviewer reports missing workflow changes as a manual follow-up instead of a blocking finding.
