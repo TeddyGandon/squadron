@@ -143,14 +143,16 @@ jobs:
             bash -c "$SQUADRON_TEST_COMMAND"
           } 2>&1 | tee "$RUNNER_TEMP/test-output.log"
 
-      - name: Squash merge pull request
+      - name: Queue coder to merge
+        working-directory: product
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          AGENT_LABEL: agent:coder
         run: |
-          if ! gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --delete-branch; then
-            echo '::notice::Direct merge is blocked (for example by pending required checks); enabling auto-merge.'
-            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --squash --auto
-          fi
+          # The coder merges only this commit; keep the prefix and SHA on the first line.
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Squadron tester passed on commit $(git rev-parse HEAD). The coder will merge the pull request."
+          bash "$HELPERS/set-agent-label.sh"
 
       - name: Report failure
         if: failure()
