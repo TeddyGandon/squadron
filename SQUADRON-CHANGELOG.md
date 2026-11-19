@@ -1,5 +1,11 @@
 # Squadron Changelog
 
+## 2026-11-19
+
+- Squadron now works on one issue at a time so its pull requests do not conflict with each other. A `status:todo` issue starts only when no other issue is `status:in-progress` or `status:testing`; otherwise it gets a comment and waits. The oldest queued issue starts automatically when the previous one is merged, closed, abandoned (its pull request closed without merging), or sent back for requirements. A failed issue keeps the pipeline busy until it is retried or closed.
+- When the requirements check finds missing information, the issue now loses its status label instead of returning to `status:todo`, so the queue does not restart it. Add `status:todo` again after updating the issue.
+- Closing a Squadron pull request without merging now removes its issue's status. Run **Squadron Setup** again to refresh the `status:todo` label description.
+
 ## 2026-11-18
 
 - The coder now merges pull requests instead of the tester. When the tests pass, the tester comments `Squadron tester passed` with the tested commit and queues the coder, which squash-merges that commit (or enables auto-merge). It refuses to merge if the branch changed after the tests passed.
