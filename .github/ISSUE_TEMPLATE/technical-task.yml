@@ -1,7 +1,6 @@
 name: Technical task
 description: Propose engineering work, maintenance, or an infrastructure change.
 title: "[Technical]: "
-labels: ["status:todo"]
 body:
   - type: markdown
     attributes:
