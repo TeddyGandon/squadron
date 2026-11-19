@@ -3,7 +3,7 @@ name: Squadron
 # Single event router: every issue/PR event lands here and starts at most one role job.
 on:
   issues:
-    types: [labeled]
+    types: [labeled, closed]
   pull_request:
     types: [labeled, closed]
 
@@ -15,14 +15,63 @@ defaults:
     shell: bash
 
 jobs:
-  coder:
+  # Squadron works on one issue at a time so pull requests do not conflict with each other.
+  # A `status:todo` issue starts only when no other open issue is `status:in-progress` or
+  # `status:testing`; otherwise it waits and start-next-issue.sh starts it later. Claims run in
+  # one global concurrency group so two issues cannot both see an empty pipeline. GitHub keeps
+  # only the latest pending run of a group and cancels older pending ones; a cancelled claim
+  # leaves its issue `status:todo`, so the queue still picks it up.
+  claim:
     if: >-
       github.event_name == 'issues' &&
+      github.event.action == 'labeled' &&
       github.event.label.name == 'status:todo' &&
       github.event.issue.state == 'open'
     runs-on: ubuntu-latest
-    # issues: write lets the default token return an issue to status:todo without
-    # re-triggering this job (labels set by GITHUB_TOKEN start no workflow).
+    concurrency:
+      group: squadron-claim
+    outputs:
+      claimed: ${{ steps.claim.outputs.claimed }}
+    env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Claim the pipeline or queue the issue
+        id: claim
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: |
+          # Labels may have changed while this claim waited (for example a duplicate start).
+          if [[ "$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json state,labels \
+            --jq '.state == "OPEN" and any(.labels[]; .name == "status:todo")')" != 'true' ]]; then
+            echo "::notice::Issue #$ISSUE_NUMBER is no longer queued; nothing to start."
+            echo 'claimed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          busy=''
+          for status in status:in-progress status:testing; do
+            busy="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label "$status" --limit 100 \
+              --json number --jq "[.[].number | select(. != $ISSUE_NUMBER)] | first // empty")"
+            if [[ -n "$busy" ]]; then break; fi
+          done
+          if [[ -n "$busy" ]]; then
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+              "Squadron is working on #$busy and handles one issue at a time to avoid merge conflicts. This issue stays \`status:todo\` and starts automatically when the pipeline is free (oldest queued issue first)."
+            echo 'claimed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          STATUS_LABEL=status:in-progress bash .github/scripts/set-issue-status-label.sh
+          echo 'claimed=true' >> "$GITHUB_OUTPUT"
+
+  coder:
+    needs: claim
+    if: needs.claim.outputs.claimed == 'true'
+    runs-on: ubuntu-latest
+    # issues: write lets the default token take an issue out of the queue without
+    # triggering a workflow (labels set by GITHUB_TOKEN start no workflow).
     permissions:
       contents: read
       issues: write
@@ -42,12 +91,6 @@ jobs:
         with:
           path: squadron
           persist-credentials: false
-
-      - name: Mark issue In Progress
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-          STATUS_LABEL: status:in-progress
-        run: bash "$HELPERS/set-issue-status-label.sh"
 
       - uses: actions/setup-node@v4
         with:
@@ -86,16 +129,18 @@ jobs:
           python3 "$HELPERS/extract-requirements-report.py" \
             "$RUNNER_TEMP/requirements-output.txt" "$RUNNER_TEMP/requirements-comment.md"
 
-      - name: Return issue to To do
+      - name: Return issue to its author and start the next one
         if: steps.requirements.outputs.ready != 'true'
         env:
-          COMMENT_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
           GH_TOKEN: ${{ github.token }}
-          STATUS_LABEL: status:todo
+          STATUS_LABEL: ''
         run: |
-          GH_TOKEN="$COMMENT_TOKEN" gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
+          GH_TOKEN="$SQUADRON_GITHUB_TOKEN" gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
             --body-file "$RUNNER_TEMP/requirements-comment.md"
+          # No status: the issue leaves the queue until its author adds `status:todo` again.
           bash "$HELPERS/set-issue-status-label.sh"
+          GH_TOKEN="$SQUADRON_GITHUB_TOKEN" bash "$HELPERS/start-next-issue.sh"
 
       - name: Implement issue
         if: steps.requirements.outputs.ready == 'true'
@@ -490,3 +535,57 @@ jobs:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           STATUS_LABEL: status:done
         run: ISSUE_NUMBER="${PR_HEAD_REF#squadron/issue-}" bash .github/scripts/set-issue-status-label.sh
+
+      - name: Start the next queued issue
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: bash .github/scripts/start-next-issue.sh
+
+  # A Squadron PR closed without merging abandons its issue: take the issue out of the queue
+  # so it no longer holds the pipeline, then start the next one.
+  release:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'squadron/issue-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Take issue out of the queue
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          STATUS_LABEL: ''
+        run: |
+          export ISSUE_NUMBER="${PR_HEAD_REF#squadron/issue-}"
+          if [[ "$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json state,labels \
+            --jq '.state == "OPEN" and any(.labels[]; .name == "status:in-progress" or .name == "status:testing")')" == 'true' ]]; then
+            bash .github/scripts/set-issue-status-label.sh
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+              "Squadron pull request #$PR_NUMBER was closed without merging, so this issue left the Squadron queue. Add \`status:todo\` to start it again."
+          fi
+
+      - name: Start the next queued issue
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: bash .github/scripts/start-next-issue.sh
+
+  # A closed issue no longer holds the pipeline (it may have been in progress).
+  issue-closed:
+    if: github.event_name == 'issues' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Start the next queued issue
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: bash .github/scripts/start-next-issue.sh

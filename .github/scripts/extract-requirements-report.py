@@ -66,7 +66,7 @@ def main():
             "",
             "### Next step",
             "Answer these points **in the issue title or body** (the coder and tester only read those, not comments), "
-            "then remove and re-apply `status:todo` to restart the coder.",
+            "then add `status:todo` again to queue the issue for the coder.",
         ]
         comment_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

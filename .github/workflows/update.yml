@@ -69,6 +69,7 @@ jobs:
             .github/scripts/install-dependencies.sh
             .github/scripts/set-agent-label.sh
             .github/scripts/set-issue-status-label.sh
+            .github/scripts/start-next-issue.sh
             .github/skills/squadron-requirements-checker/SKILL.md
             .github/skills/squadron-requirements-helper/SKILL.md
             .github/workflows/coder.yml
