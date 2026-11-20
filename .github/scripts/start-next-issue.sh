@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Squadron works on one issue at a time. When an issue leaves the pipeline (merged, closed,
-# abandoned, or sent back for requirements), this starts the oldest queued `status:todo` issue
-# by re-applying its label, which fires the `labeled` event that starts the coder. GH_TOKEN
+# abandoned, or sent back for requirements), this re-applies `status:todo` to the oldest queued
+# issue, which fires the `labeled` event that runs a claim (claim-next-issue.sh). The claim
+# decides what starts, so a duplicate trigger is harmless. GH_TOKEN
 # must be SQUADRON_GITHUB_TOKEN: labels set with the default GITHUB_TOKEN start no workflow.
 set -euo pipefail
 
@@ -26,5 +27,6 @@ fi
 
 printf 'Starting queued issue #%s.\n' "$next"
 endpoint="repos/$GITHUB_REPOSITORY/issues/$next/labels"
-gh api --method DELETE "$endpoint/status:todo" --silent
+# Another trigger may have removed the label first; adding it back is all that matters.
+gh api --method DELETE "$endpoint/status:todo" --silent || true
 gh api --method POST "$endpoint" -f 'labels[]=status:todo' --silent

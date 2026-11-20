@@ -64,6 +64,7 @@ jobs:
             .github/ISSUE_TEMPLATE/bug.yml
             .github/ISSUE_TEMPLATE/feature.yml
             .github/ISSUE_TEMPLATE/technical-task.yml
+            .github/scripts/claim-next-issue.sh
             .github/scripts/extract-requirements-report.py
             .github/scripts/extract-review-report.py
             .github/scripts/install-dependencies.sh
