@@ -439,6 +439,7 @@ jobs:
             --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
       - name: Commit and push fixes
+        id: commit
         if: steps.feedback.outputs.mode == 'fix'
         working-directory: product
         env:
@@ -448,15 +449,40 @@ jobs:
           git clean -fdq -- .github/workflows
           git add -A
           if git diff --cached --quiet; then
-            touch "$RUNNER_TEMP/no-changes"
-            echo '::error::The coder made no changes to address the feedback.'
-            exit 1
+            echo '::warning::The coder made no changes to address the feedback.'
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m "fix: address feedback on pull request #$PR_NUMBER"
           git push "https://x-access-token:${SQUADRON_GITHUB_TOKEN}@${GITHUB_SERVER_URL#https://}/${GITHUB_REPOSITORY}.git" \
             "HEAD:$PR_HEAD_REF"
+
+      # The reviewer is model-generated, so a fresh review of the same code can settle findings
+      # the coder could not act on. Allow it once per commit so the coder and reviewer cannot
+      # loop; a second no-change run on the same commit fails and asks a person.
+      - name: Request a fresh review after no changes
+        if: steps.commit.outputs.changed == 'false'
+        working-directory: product
+        env:
+          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+        run: |
+          marker="<!-- squadron-no-changes:$(git rev-parse HEAD) -->"
+          SQUADRON_LOGIN="$(gh api user --jq '.login')"
+          previous="$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+            --jq "[.[] | select(.user.login == \"$SQUADRON_LOGIN\") | select(.body | contains(\"$marker\"))] | length" \
+            | awk '{ total += $1 } END { print total + 0 }')"
+          if ((previous > 0)); then
+            touch "$RUNNER_TEMP/no-changes"
+            echo '::error::The coder made no changes again after a fresh review of the same commit.'
+            exit 1
+          fi
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "Squadron coder made no changes for the latest feedback, so the reviewer will review this pull request again. This happens once per commit; if the coder makes no changes again, a person must step in.
+
+          $marker"
 
       - name: Queue reviewer
         if: steps.feedback.outputs.mode == 'fix' || steps.conflicts.outputs.found == 'true'
@@ -484,7 +510,7 @@ jobs:
               "Squadron coder could not merge the pull request. See the [workflow run]($RUN_URL). If the branch changed after the tester passed, re-apply \`agent:tester\`; otherwise re-apply \`agent:coder\` to retry the merge."
           elif [[ -f "$RUNNER_TEMP/no-changes" ]]; then
             gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
-              "Squadron coder made no changes for the latest feedback, so retrying \`agent:coder\` will not help. See the [workflow run]($RUN_URL) for its explanation. If the remaining findings need changes the agents cannot make (such as files under \`.github/workflows\`), make them yourself or update the issue, then re-apply \`agent:reviewer\`."
+              "Squadron coder made no changes for the latest feedback, even after a fresh review of the same commit, so retrying \`agent:coder\` will not help. See the [workflow run]($RUN_URL) for its explanation. If the remaining findings need changes the agents cannot make (such as files under \`.github/workflows\`), make them yourself or update the issue, then re-apply \`agent:reviewer\`."
           else
             gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
               "Squadron coder fix failed. See the [workflow run]($RUN_URL). Re-apply \`agent:coder\` to retry."
