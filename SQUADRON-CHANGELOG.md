@@ -1,5 +1,10 @@
 # Squadron Changelog
 
+## 2026-11-20
+
+- Fixed queueing when three or more issues get `status:todo` at once. GitHub cancelled the claims in between, so those issues got no queue comment. Each claim now processes the whole queue: it starts the oldest issue when the pipeline is free and comments on every other waiting issue.
+- When the coder makes no changes for the latest feedback, it now asks the reviewer for a fresh review instead of failing, once per commit. If it makes no changes again on the same commit, it fails and asks a person to step in, as before.
+
 ## 2026-11-19
 
 - Squadron now works on one issue at a time so its pull requests do not conflict with each other. A `status:todo` issue starts only when no other issue is `status:in-progress` or `status:testing`; otherwise it gets a comment and waits. The oldest queued issue starts automatically when the previous one is merged, closed, abandoned (its pull request closed without merging), or sent back for requirements. A failed issue keeps the pipeline busy until it is retried or closed.
