@@ -68,11 +68,13 @@ jobs:
             .github/scripts/extract-requirements-report.py
             .github/scripts/extract-review-report.py
             .github/scripts/install-dependencies.sh
+            .github/scripts/read-issue-directives.sh
             .github/scripts/set-agent-label.sh
             .github/scripts/set-issue-status-label.sh
             .github/scripts/start-next-issue.sh
             .github/skills/squadron-requirements-checker/SKILL.md
             .github/skills/squadron-requirements-helper/SKILL.md
+            .github/squadron-models.txt
             .github/workflows/coder.yml
             .github/workflows/reviewer.yml
             .github/workflows/setup.yml
@@ -96,3 +98,13 @@ jobs:
 
           git commit -m 'chore: update Squadron'
           git push origin "HEAD:$GITHUB_REF_NAME"
+
+      # Setup is idempotent, so run it after every update (even with no file changes) to bring
+      # the labels in line with the updated template. It runs from the pushed commit.
+      - name: Run setup
+        if: steps.self.outputs.relaunched != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run setup.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
+          echo '::notice::Squadron Setup was started to update the labels and check the secrets.'

@@ -1,7 +1,9 @@
 name: Squadron Setup
 
-# Run once from the Actions tab after creating a repository from this template.
-# Creates the Squadron labels and checks that the required secrets work.
+# Run from the Actions tab after creating a repository from this template. The update workflow
+# also runs it after every update. It is idempotent: each run creates missing Squadron labels,
+# updates the color and description of existing ones, deletes model labels that are no longer
+# listed in .github/squadron-models.txt, and checks that the required secrets work.
 on:
   workflow_dispatch:
 
@@ -17,11 +19,16 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Create labels
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Create or update labels
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
+          # --force updates the color and description of a label that already exists.
           create() { gh label create "$1" --color "$2" --description "$3" --force; }
           create status:todo        ededed 'Squadron: queued for the coder (one issue at a time)'
           create status:in-progress fbca04 'Squadron: being implemented or fixed'
@@ -30,6 +37,26 @@ jobs:
           create agent:coder        5319e7 'Squadron: queue the coder on this pull request'
           create agent:reviewer     5319e7 'Squadron: queue the reviewer on this pull request'
           create agent:tester       5319e7 'Squadron: queue the tester on this pull request'
+
+          # Every directive:* label shares one color.
+          directive_color=d876e3
+          create directive:skip-requirements-check "$directive_color" \
+            'Squadron: the coder implements the issue without checking its requirements'
+
+          models=()
+          while read -r model cost _; do
+            label="directive:use-model-$model-cost-$cost"
+            create "$label" "$directive_color" "Squadron: agents use $model ($cost cost) for this issue"
+            models+=("$label")
+          done < <(grep -vE '^[[:space:]]*(#|$)' .github/squadron-models.txt)
+
+          # Delete model labels that are no longer listed, so the labels match the list.
+          gh label list --limit 1000 --json name --jq '.[].name' | while IFS= read -r label; do
+            if [[ "$label" == directive:use-model-* && " ${models[*]} " != *" $label "* ]]; then
+              echo "Deleting obsolete label $label"
+              gh label delete "$label" --yes
+            fi
+          done
 
       - name: Check secrets
         env:

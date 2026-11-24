@@ -40,7 +40,8 @@ jobs:
           bash "$HELPERS/set-agent-label.sh"
           echo "number=${PR_HEAD_REF#squadron/issue-}" >> "$GITHUB_OUTPUT"
           gh issue view "${PR_HEAD_REF#squadron/issue-}" --repo "$GITHUB_REPOSITORY" \
-            --json title,body > "$RUNNER_TEMP/issue.json"
+            --json title,body,labels > "$RUNNER_TEMP/issue.json"
+          bash "$HELPERS/read-issue-directives.sh" "$RUNNER_TEMP/issue.json"
 
       - uses: actions/setup-node@v4
         with:
@@ -86,7 +87,7 @@ jobs:
           $ISSUE_BODY
           PROMPT
           copilot --prompt "$(cat "$RUNNER_TEMP/prompt.txt")" \
-            --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent \
+            ${SQUADRON_MODEL:+--model "$SQUADRON_MODEL"} --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent \
             > "$RUNNER_TEMP/review-output.txt"
           python3 "$HELPERS/extract-review-report.py" \
             "$RUNNER_TEMP/review-output.txt" "$RUNNER_TEMP/review-comment.md"

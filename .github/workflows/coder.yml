@@ -69,12 +69,13 @@ jobs:
           path: squadron
           persist-credentials: false
 
-      - name: Load issue
+      - name: Load issue and directives
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
         run: |
           gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" \
-            --json title,body > "$RUNNER_TEMP/issue.json"
+            --json title,body,labels > "$RUNNER_TEMP/issue.json"
+          bash "$HELPERS/read-issue-directives.sh" "$RUNNER_TEMP/issue.json"
 
       - uses: actions/setup-node@v4
         with:
@@ -90,6 +91,10 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           SKILL_FILE: ${{ github.workspace }}/squadron/.github/skills/squadron-requirements-checker/SKILL.md
         run: |
+          if [[ "$SQUADRON_SKIP_REQUIREMENTS_CHECK" == 'true' ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           ISSUE_TITLE="$(jq -r '.title' "$RUNNER_TEMP/issue.json")"
           ISSUE_BODY="$(jq -r '.body // ""' "$RUNNER_TEMP/issue.json")"
           cat > "$RUNNER_TEMP/requirements-prompt.txt" <<PROMPT
@@ -106,7 +111,7 @@ jobs:
           $ISSUE_BODY
           PROMPT
           copilot --prompt "$(cat "$RUNNER_TEMP/requirements-prompt.txt")" \
-            --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent \
+            ${SQUADRON_MODEL:+--model "$SQUADRON_MODEL"} --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent \
             > "$RUNNER_TEMP/requirements-output.txt"
           # The check must not leave changes behind for the implementation step.
           git checkout -- . && git clean -fdq
@@ -149,7 +154,7 @@ jobs:
           $ISSUE_BODY
           PROMPT
           copilot --prompt "$(cat "$RUNNER_TEMP/prompt.txt")" \
-            --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
+            ${SQUADRON_MODEL:+--model "$SQUADRON_MODEL"} --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
       - name: Discard workflow edits
         if: steps.requirements.outputs.ready == 'true'
@@ -246,7 +251,8 @@ jobs:
           bash "$HELPERS/set-agent-label.sh"
           echo "issue-number=${PR_HEAD_REF#squadron/issue-}" >> "$GITHUB_OUTPUT"
           gh issue view "${PR_HEAD_REF#squadron/issue-}" --repo "$GITHUB_REPOSITORY" \
-            --json title,body > "$RUNNER_TEMP/issue.json"
+            --json title,body,labels > "$RUNNER_TEMP/issue.json"
+          bash "$HELPERS/read-issue-directives.sh" "$RUNNER_TEMP/issue.json"
           # Only the most recent reviewer or tester report decides what the coder does. Only
           # comments posted with SQUADRON_GITHUB_TOKEN count, so nobody else can request a merge.
           SQUADRON_LOGIN="$(gh api user --jq '.login')"
@@ -350,7 +356,7 @@ jobs:
           $ISSUE_BODY
           PROMPT
           copilot --prompt "$(cat "$RUNNER_TEMP/prompt.txt")" \
-            --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
+            ${SQUADRON_MODEL:+--model "$SQUADRON_MODEL"} --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
       - name: Commit and push conflict resolution
         if: steps.conflicts.outputs.found == 'true'
@@ -428,7 +434,7 @@ jobs:
           $FEEDBACK
           PROMPT
           copilot --prompt "$(cat "$RUNNER_TEMP/prompt.txt")" \
-            --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
+            ${SQUADRON_MODEL:+--model "$SQUADRON_MODEL"} --allow-all-tools --no-ask-user --secret-env-vars=COPILOT_GITHUB_TOKEN --silent
 
       - name: Commit and push fixes
         id: commit

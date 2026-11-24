@@ -1,0 +1,17 @@
+# Models that Squadron agents can be switched to with a
+# `directive:use-model-<model>-cost-<tier>` issue label.
+#
+# One model per line: <Copilot CLI model id> <cost tier>. The Squadron Setup workflow creates
+# one label per line and deletes `directive:use-model-*` labels that are no longer listed.
+# Agents ignore model labels that are not listed here.
+#
+# Only models included in the Copilot Pro plan are listed. Cost tiers follow GitHub's
+# per-token price (output tokens, default tier, from GitHub's "Models and pricing" page):
+#   low:    under $2 per 1M output tokens
+#   medium: $2 to $8 per 1M output tokens
+#   high:   over $8 per 1M output tokens
+gpt-5.6-luna      low
+claude-haiku-5.5  low
+claude-haiku-4.5  medium
+claude-sonnet-5   high
+claude-sonnet-4.6 high
