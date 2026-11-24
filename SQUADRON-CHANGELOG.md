@@ -1,5 +1,10 @@
 # Squadron Changelog
 
+## 2026-11-24
+
+- The next queued issue now starts whenever the pipeline is free, whatever freed it: a new `next-issue` job runs at the end of every Squadron workflow run and when an issue closes, instead of only after some paths. This fixes queued issues not starting after the coder rejected an issue.
+- When the coder fails before opening a pull request, the issue now leaves the queue so the next issue can start. Add `status:todo` to retry it.
+
 ## 2026-11-20
 
 - Fixed queueing when three or more issues get `status:todo` at once. GitHub cancelled the claims in between, so those issues got no queue comment. Each claim now processes the whole queue: it starts the oldest issue when the pipeline is free and comments on every other waiting issue.
