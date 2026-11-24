@@ -18,13 +18,13 @@ Squadron turns labeled GitHub issues into a coordinated implementation, review, 
 4. **Test.** The tester uses the issue as its requirements source and runs the configured test command. Success or failure, it returns the pull request to the coder.
 5. **Merge.** After a successful test run, the coder squash-merges the pull request. If it conflicts with the base branch, the coder resolves the conflicts first and sends the pull request back through review and testing.
 
-Issue status is tracked with `status:todo`, `status:in-progress`, `status:testing`, and `status:done`. Agent handoffs use `agent:coder`, `agent:reviewer`, and `agent:tester`.
+Issue status is tracked with `status:todo`, `status:in-progress`, `status:testing`, and `status:done`. Agent handoffs use `agent:coder`, `agent:reviewer`, and `agent:tester`. `directive:*` labels on an issue skip the requirements check or switch the agents to another model (see [USAGE.md](USAGE.md#issue-directives)).
 
 ## Get started
 
 1. Use this repository as a template to create your product repository.
 2. Add the `COPILOT_GITHUB_TOKEN` and `SQUADRON_GITHUB_TOKEN` secrets described in the [usage guide](USAGE.md).
-3. Run **Actions → Squadron Setup** once to create the labels and check the secrets.
+3. Run **Actions → Squadron Setup** to create the labels and check the secrets. It is safe to run again, and **Squadron Update** runs it after every update.
 4. Create an issue from one of the forms to start the workflow. For manually created issues, add `status:todo` when the issue is ready.
 
 To update the workflow files and template guides later, run **Actions → Squadron Update**. It first updates itself and relaunches if its own workflow changed, then copies the latest versions of the template's Squadron files (listed in the workflow) without touching your other `.github/` files.

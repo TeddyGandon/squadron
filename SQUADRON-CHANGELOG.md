@@ -2,6 +2,9 @@
 
 ## 2026-11-24
 
+- New issue directive labels (all the same color). `directive:skip-requirements-check` makes the coder implement the issue without checking its requirements. `directive:use-model-<model>-cost-<low|medium|high>` makes every agent use that Copilot model for the issue. The available models, all included in Copilot Pro, are listed in `.github/squadron-models.txt`.
+- **Squadron Setup** is now idempotent: it creates or updates every label and deletes model labels that are no longer listed. **Squadron Update** runs it automatically after each update.
+
 - The next queued issue now starts whenever the pipeline is free, whatever freed it: a new `next-issue` job runs at the end of every Squadron workflow run and when an issue closes, instead of only after some paths. This fixes queued issues not starting after the coder rejected an issue.
 - When the coder fails before opening a pull request, the issue now leaves the queue so the next issue can start. Add `status:todo` to retry it.
 

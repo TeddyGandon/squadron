@@ -11,7 +11,7 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 1. Create these repository secrets:
    - `COPILOT_GITHUB_TOKEN`: a token authorized to use GitHub Copilot. It is only provided to the Copilot CLI steps.
    - `SQUADRON_GITHUB_TOKEN`: a fine-grained token for this repository with **Contents**, **Pull requests**, **Issues**, and **Workflows** set to **Read and write**. Approve it for the organization if required. It is used for pull requests, labels, comments, pushes, and merges; the update workflow also needs **Workflows** permission to replace workflow files.
-2. Run **Actions → Squadron Setup → Run workflow** once. It creates the `status:*` and `agent:*` labels and checks that both secrets are present and that `SQUADRON_GITHUB_TOKEN` can write to the repository.
+2. Run **Actions → Squadron Setup → Run workflow**. It creates or updates the `status:*`, `agent:*`, and `directive:*` labels and checks that both secrets are present and that `SQUADRON_GITHUB_TOKEN` can write to the repository.
 3. Optionally set these repository variables when the defaults do not fit the product:
    - `SQUADRON_TEST_COMMAND`: defaults to `npm run test`.
    - `SQUADRON_TEST_PATHS`: comma-separated glob patterns for test files, defaulting to `**/*.test.*,**/*.spec.*` (test and spec files anywhere, including the repository root).
@@ -22,7 +22,15 @@ GitHub Actions pipelines for a three-role AI engineering workflow using issue la
 Run **Actions → Squadron Update → Run workflow** to copy the latest Squadron files from the Squadron template's default branch.
 
 1. The workflow first compares its own file (`.github/workflows/update.yml`) with the template's. If it changed, it commits the new version as `chore: update Squadron update workflow`, relaunches itself, and stops; the relaunched run performs the update with the new version.
-2. Otherwise it copies the template files explicitly listed in the workflow (the Squadron issue forms, scripts, skills, and workflows under `.github/`, plus `SQUADRON.md`, `SQUADRON-CHANGELOG.md`, and `USAGE.md`), then commits and pushes the changes as `chore: update Squadron`. If those files already match, it does nothing.
+2. Otherwise it copies the template files explicitly listed in the workflow (the Squadron issue forms, scripts, skills, and workflows under `.github/`, plus `SQUADRON.md`, `SQUADRON-CHANGELOG.md`, and `USAGE.md`), then commits and pushes the changes as `chore: update Squadron`. If those files already match, it commits nothing.
+3. It then starts **Squadron Setup**, which is safe to run any number of times: it brings the labels in line with the updated template (including deleting model labels the template no longer lists) and checks the secrets.
+
+## Issue directives
+
+Add these labels to an issue, before it starts, to change how the agents handle it. Every agent reads them from the issue, including on later review, test, and fix runs.
+
+- `directive:skip-requirements-check`: the coder implements the issue directly, without the requirements check.
+- `directive:use-model-<model>-cost-<low|medium|high>`: every agent (coder, reviewer, tester) runs Copilot with that model instead of the default. The cost tier shows the model's relative price. Low is under $2, medium is $2 to $8, and high is over $8 per 1M output tokens, from GitHub's per-token pricing. The models come from `.github/squadron-models.txt`, which lists models included in Copilot Pro. Use one model label per issue. If several are set, the first in alphabetical order is used.
 
 The listed files are overwritten, so customizations in them will be lost. Other files, including your own files under `.github/` and `README.md`, are left unchanged. Files removed from the template are not deleted from your repository.
 
