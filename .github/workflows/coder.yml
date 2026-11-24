@@ -113,7 +113,7 @@ jobs:
           python3 "$HELPERS/extract-requirements-report.py" \
             "$RUNNER_TEMP/requirements-output.txt" "$RUNNER_TEMP/requirements-comment.md"
 
-      - name: Return issue to its author and start the next one
+      - name: Return issue to its author
         if: steps.requirements.outputs.ready != 'true'
         env:
           SQUADRON_GITHUB_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
@@ -124,7 +124,6 @@ jobs:
             --body-file "$RUNNER_TEMP/requirements-comment.md"
           # No status: the issue leaves the queue until its author adds `status:todo` again.
           bash "$HELPERS/set-issue-status-label.sh"
-          GH_TOKEN="$SQUADRON_GITHUB_TOKEN" bash "$HELPERS/start-next-issue.sh"
 
       - name: Implement issue
         if: steps.requirements.outputs.ready == 'true'
@@ -189,13 +188,22 @@ jobs:
           bash "$HELPERS/set-agent-label.sh"
 
       - name: Report failure
-        if: failure()
+        if: failure() || cancelled()
         env:
           GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.pull-request.outputs.pull-request-number }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          if [[ -n "$PR_NUMBER" ]]; then
+            # The PR exists, so the issue keeps the pipeline until the PR merges or closes.
+            gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+              "Squadron coder opened #$PR_NUMBER but could not queue its review. See the [workflow run]($RUN_URL). Add \`agent:reviewer\` to the pull request to continue."
+            exit 0
+          fi
+          # No PR yet, so nothing can conflict: free the pipeline for the next queued issue.
+          STATUS_LABEL='' bash "$HELPERS/set-issue-status-label.sh"
           gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
-            "Squadron coder failed. See the [workflow run]($RUN_URL). Re-apply \`status:todo\` to retry."
+            "Squadron coder failed. See the [workflow run]($RUN_URL). The issue left the queue so the next issue can start; add \`status:todo\` to retry (it waits its turn if another issue is in progress)."
 
   coder-fix:
     if: >-
@@ -546,11 +554,6 @@ jobs:
           STATUS_LABEL: status:done
         run: ISSUE_NUMBER="${PR_HEAD_REF#squadron/issue-}" bash .github/scripts/set-issue-status-label.sh
 
-      - name: Start the next queued issue
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-        run: bash .github/scripts/start-next-issue.sh
-
   # A Squadron PR closed without merging abandons its issue: take the issue out of the queue
   # so it no longer holds the pipeline, then start the next one.
   release:
@@ -581,14 +584,18 @@ jobs:
               "Squadron pull request #$PR_NUMBER was closed without merging, so this issue left the Squadron queue. Add \`status:todo\` to start it again."
           fi
 
-      - name: Start the next queued issue
-        env:
-          GH_TOKEN: ${{ secrets.SQUADRON_GITHUB_TOKEN }}
-        run: bash .github/scripts/start-next-issue.sh
-
-  # A closed issue no longer holds the pipeline (it may have been in progress).
-  issue-closed:
-    if: github.event_name == 'issues' && github.event.action == 'closed'
+  # Runs at the end of every Squadron workflow run in which a job ran (whatever its outcome),
+  # and when an issue closes, so the next queued issue starts as soon as the pipeline is free:
+  # after a merge, a rejection, a failure, an abandoned PR, or a cancelled claim.
+  # start-next-issue.sh does nothing while an issue is still in progress.
+  next-issue:
+    needs: [claim, coder, coder-fix, reviewer, tester, mark-done, release]
+    if: >-
+      always() && (
+        contains(needs.*.result, 'success') ||
+        contains(needs.*.result, 'failure') ||
+        contains(needs.*.result, 'cancelled') ||
+        (github.event_name == 'issues' && github.event.action == 'closed'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
