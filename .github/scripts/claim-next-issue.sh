@@ -3,11 +3,13 @@
 # whose label triggered it, because GitHub keeps only the newest pending run of a concurrency
 # group and cancels older pending ones: the run that does execute must cover every queued issue.
 #
-# - If an open issue is `status:in-progress` or `status:testing` (without `status:todo`), the
-#   pipeline is busy and nothing starts.
-# - Otherwise it starts one issue: first a retry (an in-progress/testing issue someone re-applied
+# - If an open issue is `status:refinement`, `status:in-progress`, `status:review`, or
+#   `status:testing` (without `status:todo`), the pipeline is busy and nothing starts.
+# - Otherwise it starts one issue: first a retry (an active issue someone re-applied
 #   `status:todo` to), else the oldest `status:todo` issue (lowest number). Starting means
-#   setting `status:in-progress` and writing `issue` and `title` to GITHUB_OUTPUT for the coder.
+#   setting `status:refinement` (or `status:in-progress` when the issue has
+#   `directive:skip-requirements-check`) and writing `issue` and `title` to GITHUB_OUTPUT for
+#   the coder.
 # - Every other `status:todo` issue gets a queue comment once per wait.
 set -euo pipefail
 
@@ -23,7 +25,7 @@ issues="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 1000 \
 select_numbers() {
   jq -r "[.[] | select($1) | .number] | sort | .[]" <<< "$issues"
 }
-active='(.labels | index("status:in-progress") or index("status:testing"))'
+active='(.labels | index("status:refinement") or index("status:in-progress") or index("status:review") or index("status:testing"))'
 todo='(.labels | index("status:todo"))'
 mapfile -t busy < <(select_numbers "$active and ($todo | not)")
 mapfile -t retries < <(select_numbers "$active and $todo")
@@ -40,7 +42,12 @@ if ((${#busy[@]} == 0)); then
 fi
 
 if [[ -n "$started" ]]; then
-  ISSUE_NUMBER="$started" STATUS_LABEL=status:in-progress bash "$here/set-issue-status-label.sh" > /dev/null
+  status=status:refinement
+  skip_check='any(.[]; .number == $number and (.labels | index("directive:skip-requirements-check")))'
+  if [[ "$(jq --argjson number "$started" "$skip_check" <<< "$issues")" == 'true' ]]; then
+    status=status:in-progress
+  fi
+  ISSUE_NUMBER="$started" STATUS_LABEL="$status" bash "$here/set-issue-status-label.sh" > /dev/null
   title="$(gh issue view "$started" --repo "$GITHUB_REPOSITORY" --json title --jq '.title')"
   {
     echo 'claimed=true'

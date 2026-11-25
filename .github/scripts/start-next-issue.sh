@@ -9,7 +9,7 @@ set -euo pipefail
 : "${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
 
-for status in status:in-progress status:testing; do
+for status in status:refinement status:in-progress status:review status:testing; do
   busy="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label "$status" --limit 1 \
     --json number --jq '.[].number')"
   if [[ -n "$busy" ]]; then

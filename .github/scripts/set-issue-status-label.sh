@@ -9,14 +9,14 @@ set -euo pipefail
 : "${STATUS_LABEL?STATUS_LABEL is required (empty clears the status)}"
 
 case "$STATUS_LABEL" in
-  ''|status:todo|status:in-progress|status:testing|status:done) ;;
+  ''|status:todo|status:refinement|status:in-progress|status:review|status:testing|status:done) ;;
   *)
     printf 'Unsupported issue status label: %s\n' "$STATUS_LABEL" >&2
     exit 1
     ;;
 esac
 
-status_labels='["status:todo", "status:in-progress", "status:testing", "status:done"]'
+status_labels='["status:todo", "status:refinement", "status:in-progress", "status:review", "status:testing", "status:done"]'
 current_labels="$(gh api "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER/labels?per_page=100" --jq '[.[].name]')"
 updated_labels="$(jq --argjson status_labels "$status_labels" --arg status_label "$STATUS_LABEL" \
   '{labels: ([.[] as $label | select(($status_labels | index($label)) == null) | $label]

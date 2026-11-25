@@ -39,6 +39,8 @@ jobs:
         run: |
           bash "$HELPERS/set-agent-label.sh"
           echo "number=${PR_HEAD_REF#squadron/issue-}" >> "$GITHUB_OUTPUT"
+          ISSUE_NUMBER="${PR_HEAD_REF#squadron/issue-}" STATUS_LABEL=status:review \
+            bash "$HELPERS/set-issue-status-label.sh" > /dev/null
           gh issue view "${PR_HEAD_REF#squadron/issue-}" --repo "$GITHUB_REPOSITORY" \
             --json title,body,labels > "$RUNNER_TEMP/issue.json"
           bash "$HELPERS/read-issue-directives.sh" "$RUNNER_TEMP/issue.json"

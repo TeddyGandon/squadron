@@ -130,6 +130,13 @@ jobs:
           # No status: the issue leaves the queue until its author adds `status:todo` again.
           bash "$HELPERS/set-issue-status-label.sh"
 
+      - name: Mark issue in progress
+        if: steps.requirements.outputs.ready == 'true' && env.SQUADRON_SKIP_REQUIREMENTS_CHECK != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS_LABEL: status:in-progress
+        run: bash "$HELPERS/set-issue-status-label.sh" > /dev/null
+
       - name: Implement issue
         if: steps.requirements.outputs.ready == 'true'
         working-directory: product
@@ -584,7 +591,7 @@ jobs:
         run: |
           export ISSUE_NUMBER="${PR_HEAD_REF#squadron/issue-}"
           if [[ "$(gh issue view "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --json state,labels \
-            --jq '.state == "OPEN" and any(.labels[]; .name == "status:in-progress" or .name == "status:testing")')" == 'true' ]]; then
+            --jq '.state == "OPEN" and any(.labels[]; .name == "status:refinement" or .name == "status:in-progress" or .name == "status:review" or .name == "status:testing")')" == 'true' ]]; then
             bash .github/scripts/set-issue-status-label.sh
             gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body \
               "Squadron pull request #$PR_NUMBER was closed without merging, so this issue left the Squadron queue. Add \`status:todo\` to start it again."
