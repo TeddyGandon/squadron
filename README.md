@@ -18,7 +18,7 @@ Squadron turns labeled GitHub issues into a coordinated implementation, review, 
 4. **Test.** The tester uses the issue as its requirements source and runs the configured test command. Success or failure, it returns the pull request to the coder.
 5. **Merge.** After a successful test run, the coder squash-merges the pull request. If it conflicts with the base branch, the coder resolves the conflicts first and sends the pull request back through review and testing.
 
-Issue status is tracked with `status:todo`, `status:in-progress`, `status:testing`, and `status:done`. Agent handoffs use `agent:coder`, `agent:reviewer`, and `agent:tester`. `directive:*` labels on an issue skip the requirements check or switch the agents to another model (see [USAGE.md](USAGE.md#issue-directives)).
+Issue status is tracked with `status:todo` (queued), `status:refinement` (requirements check), `status:in-progress` (implementation or fixes), `status:review` (code review), `status:testing`, and `status:done`. Agent handoffs use `agent:coder`, `agent:reviewer`, and `agent:tester`. `directive:*` labels on an issue skip the requirements check or switch the agents to another model (see [USAGE.md](USAGE.md#issue-directives)).
 
 ## Get started
 

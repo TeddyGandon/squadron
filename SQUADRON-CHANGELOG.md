@@ -1,5 +1,9 @@
 # Squadron Changelog
 
+## 2026-11-25
+
+- Two new statuses make it easier to see where an issue is: `status:refinement` while the coder checks the requirements, and `status:review` while the reviewer checks the pull request. An issue now goes `status:todo` → `status:refinement` → `status:in-progress` → `status:review` → `status:testing` → `status:done`. With `directive:skip-requirements-check` it goes straight to `status:in-progress`. Both new statuses keep the pipeline busy, like `status:in-progress` and `status:testing`. **Squadron Update** runs **Squadron Setup**, which creates the new labels.
+
 ## 2026-11-24
 
 - New issue directive labels (all the same color). `directive:skip-requirements-check` makes the coder implement the issue without checking its requirements. `directive:use-model-<model>-cost-<low|medium|high>` makes every agent use that Copilot model for the issue. The available models, all included in Copilot Pro, are listed in `.github/squadron-models.txt`.
