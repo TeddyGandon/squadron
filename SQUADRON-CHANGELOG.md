@@ -1,5 +1,9 @@
 # Squadron Changelog
 
+## 2026-11-27
+
+- The coder now documents its work more thoroughly: it writes user-facing documentation as Markdown pages in the `docs/` directory (created if missing, indexed in `docs/README.md`, linked from the root `README.md`) for every new or changed feature, option, configuration key, environment variable, API, or behavior, with a usage example, and adds doc comments to new or changed public functions, classes, and modules. The reviewer treats missing documentation in `docs/`, product docs written elsewhere, or missing doc comments as a blocking finding, so the pull request goes back to the coder until it is documented.
+
 ## 2026-11-25
 
 - Two new statuses make it easier to see where an issue is: `status:refinement` while the coder checks the requirements, and `status:review` while the reviewer checks the pull request. An issue now goes `status:todo` → `status:refinement` → `status:in-progress` → `status:review` → `status:testing` → `status:done`. With `directive:skip-requirements-check` it goes straight to `status:in-progress`. Both new statuses keep the pipeline busy, like `status:in-progress` and `status:testing`. **Squadron Update** runs **Squadron Setup**, which creates the new labels.
