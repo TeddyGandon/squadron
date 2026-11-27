@@ -66,7 +66,12 @@ jobs:
           Review this pull request against the linked issue, which is the requirements source of
           truth. Inspect all changed files, including documentation, with: git diff $BASE_SHA...$HEAD_SHA
           Check that relevant docs are updated and accurately describe the behavior, configuration,
-          and usage in the code; flag missing, stale, or contradictory documentation. Do not edit
+          and usage in the code; flag missing, stale, or contradictory documentation. User-facing
+          documentation must live as Markdown pages in the docs/ directory, each linked from
+          docs/README.md. Missing user-facing docs in docs/ for a new or changed feature, option,
+          configuration key, environment variable, API, or behavior, product documentation
+          written outside docs/ instead, and missing doc comments on new or changed public
+          functions, classes, or modules, are blocking documentation findings. Do not edit
           repository files. A validated result means there are no blocking correctness, security,
           acceptance-criteria, or documentation findings. Squadron agents cannot change files
           under .github/workflows; those edits are discarded before publishing. Some requirements
